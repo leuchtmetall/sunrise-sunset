@@ -227,8 +227,6 @@
       .legend-rise {
         margin-right: 0.15rem;
       }
-      .legend-set {
-      }
 
       /* ── Responsive ──────────────────────────────────────────── */
       @media (max-width: 1000px) {
@@ -304,6 +302,8 @@
       // Reference: https://gml.noaa.gov/grad/solcalc/calcdetails.html
       // ═══════════════════════════════════════════════════════════════
 
+      const toRad = (deg) => (deg * Math.PI) / 180;
+
       function sunTimes(year, month1, day, lat, lng) {
         const JD = Date.UTC(year, month1 - 1, day, 12) / 86400000 + 2440587.5;
         const T = (JD - 2451545.0) / 36525.0;
@@ -311,7 +311,7 @@
         const L0 =
           (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) % 360;
         const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
-        const Mr = (M * Math.PI) / 180;
+        const Mr = toRad(M);
         const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
 
         const C =
@@ -321,21 +321,21 @@
         const sl = L0 + C;
 
         const om = 125.04 - 1934.136 * T;
-        const lam = sl - 0.00569 - 0.00478 * Math.sin((om * Math.PI) / 180);
-        const lr = (lam * Math.PI) / 180;
+        const omr = toRad(om);
+        const lam = sl - 0.00569 - 0.00478 * Math.sin(omr);
+        const lr = toRad(lam);
 
         const e0 =
           23 +
           (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) /
             60;
-        const eps =
-          ((e0 + 0.00256 * Math.cos((om * Math.PI) / 180)) * Math.PI) / 180;
+        const eps = toRad(e0 + 0.00256 * Math.cos(omr));
 
         const sinD = Math.sin(eps) * Math.sin(lr);
         const cosD = Math.cos(Math.asin(sinD));
 
         const y = Math.tan(eps / 2) ** 2;
-        const L0r = (L0 * Math.PI) / 180;
+        const L0r = toRad(L0);
         const eot =
           4 *
           (180 / Math.PI) *
@@ -345,9 +345,9 @@
             0.5 * y * y * Math.sin(4 * L0r) -
             1.25 * e * e * Math.sin(2 * Mr));
 
-        const latr = (lat * Math.PI) / 180;
+        const latr = toRad(lat);
         const cosHA =
-          (Math.sin((-0.8333 * Math.PI) / 180) - Math.sin(latr) * sinD) /
+          (Math.sin(toRad(-0.8333)) - Math.sin(latr) * sinD) /
           (Math.cos(latr) * cosD);
 
         if (cosHA > 1) return { kind: "night" };
@@ -439,15 +439,22 @@
         const firstDow =
           (new Date(viewYear, viewMonth - 1, 1).getDay() + 6) % 7;
         const daysInMon = new Date(viewYear, viewMonth, 0).getDate();
-        const prevDays = new Date(viewYear, viewMonth - 1, 0).getDate();
+
+        // Adjacent months, derived by letting Date normalize the overflow/underflow.
+        const prevMonthEnd = new Date(viewYear, viewMonth - 1, 0);
+        const prevDays = prevMonthEnd.getDate();
+        const py = prevMonthEnd.getFullYear();
+        const pm = prevMonthEnd.getMonth() + 1;
+
+        const nextMonthStart = new Date(viewYear, viewMonth, 1);
+        const ny = nextMonthStart.getFullYear();
+        const nm = nextMonthStart.getMonth() + 1;
 
         let html = DAYS.map((d) => `<div class="col-header">${d}</div>`).join(
           "",
         );
 
         // Previous-month padding
-        const [py, pm] =
-          viewMonth === 1 ? [viewYear - 1, 12] : [viewYear, viewMonth - 1];
         for (let i = 0; i < firstDow; i++)
           html += dayCell(py, pm, prevDays - firstDow + i + 1, true);
 
@@ -462,8 +469,6 @@
 
         // Next-month padding
         const tail = (7 - ((firstDow + daysInMon) % 7)) % 7;
-        const [ny, nm] =
-          viewMonth === 12 ? [viewYear + 1, 1] : [viewYear, viewMonth + 1];
         for (let d = 1; d <= tail; d++) html += dayCell(ny, nm, d, true);
 
         document.getElementById("calendar").innerHTML = html;
@@ -472,40 +477,35 @@
 
       function dayCell(year, month, day, other, isToday = false) {
         const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        let cls =
+        const cls =
           "day" +
           (other ? " other" : "") +
           (isToday ? " today" : "") +
           (highlighted === key ? " highlighted" : "");
-        let rows = "";
 
         // Only show data for the current month's days
-        if (!other) {
-          for (let i = 0; i < locations.length; i++) {
-            const loc = locations[i];
-            const color = colorFor(i);
-            const r = sunTimes(year, month, day, loc.lat, loc.lng);
+        const rows = other
+          ? ""
+          : locations
+              .map((loc, i) => {
+                const color = colorFor(i);
+                const r = sunTimes(year, month, day, loc.lat, loc.lng);
 
-            let content;
-            if (r.kind === "normal") {
-              const sr = fmtTime(r.sunrise, loc.timezone);
-              const ss = fmtTime(r.sunset, loc.timezone);
-              content = `<span class="loc-times">
-            <span class="loc-rise" style="color:${color}">&#8593;${sr}</span>
-            <span class="loc-set"  style="color:${color}">&#8595;${ss}</span>
-          </span>`;
-            } else {
-              const label = r.kind === "night" ? "polar night" : "midnight sun";
-              content = `<span class="loc-special">${label}</span>`;
-            }
+                const content =
+                  r.kind === "normal"
+                    ? `<span class="loc-times">
+            <span class="loc-rise" style="color:${color}">&#8593;${fmtTime(r.sunrise, loc.timezone)}</span>
+            <span class="loc-set"  style="color:${color}">&#8595;${fmtTime(r.sunset, loc.timezone)}</span>
+          </span>`
+                    : `<span class="loc-special">${r.kind === "night" ? "polar night" : "midnight sun"}</span>`;
 
-            rows += `<div class="loc-row">
+                return `<div class="loc-row">
         <span class="loc-dot" style="background:${color}"></span>
         <span class="loc-name">${esc(loc.name)}</span>
         ${content}
       </div>`;
-          }
-        }
+              })
+              .join("");
 
         const clickable = other
           ? ""
@@ -551,15 +551,9 @@
       });
 
       function changeMonth(delta) {
-        viewMonth += delta;
-        if (viewMonth > 12) {
-          viewMonth = 1;
-          viewYear++;
-        }
-        if (viewMonth < 1) {
-          viewMonth = 12;
-          viewYear--;
-        }
+        const d = new Date(viewYear, viewMonth - 1 + delta, 1);
+        viewYear = d.getFullYear();
+        viewMonth = d.getMonth() + 1;
         render();
       }
 
