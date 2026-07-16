@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sunrise &amp; Sunset Calendar</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #eef2f7;
+        color: #2d3748;
+        min-height: 100vh;
+      }
+
+      /* ── Header ──────────────────────────────────────────────── */
+      header {
+        background: linear-gradient(
+          135deg,
+          #0d1b2a 0%,
+          #1b2a4a 60%,
+          #2e4a7a 100%
+        );
+        color: #fff;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+
+      .nav-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .nav-btn {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        color: #fff;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        user-select: none;
+      }
+      .nav-btn:hover {
+        background: rgba(255, 255, 255, 0.28);
+      }
+
+      .month-label {
+        font-size: 1rem;
+        font-weight: 600;
+        min-width: 150px;
+        text-align: center;
+      }
+
+      /* ── Main ────────────────────────────────────────────────── */
+      main {
+        max-width: 1280px;
+        margin: 1.5rem auto;
+        padding: 0 1rem;
+      }
+
+      /* ── Calendar ────────────────────────────────────────────── */
+      .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #c8d3e0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+      }
+
+      .col-header {
+        background: #243551;
+        color: #b8c8e8;
+        text-align: center;
+        padding: 0.5rem 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .day {
+        background: #fff;
+        padding: 0.4rem 0.45rem;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        transition: background 0.15s;
+      }
+      .day:hover {
+        background: #f5f8ff;
+      }
+      .day.other {
+        background: #f7f9fc;
+      }
+
+      .day.today .day-num {
+        background: #d63031;
+        color: #fff;
+        border-radius: 50%;
+      }
+
+      .day.highlighted {
+        background: #fffbeb;
+        box-shadow: inset 0 0 0 2px #f59e0b;
+      }
+      .day.highlighted:hover {
+        background: #fef3c7;
+      }
+
+      .day-num {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #4a5568;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-bottom: 2px;
+      }
+      .day.other .day-num {
+        color: #b0bcc8;
+      }
+
+      /* ── Per-location rows ───────────────────────────────────── */
+      .loc-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.62rem;
+        line-height: 1.35;
+      }
+
+      .loc-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .loc-name {
+        font-weight: 600;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #374151;
+      }
+
+      .loc-times {
+        display: flex;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+
+      .loc-rise,
+      .loc-set {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .loc-special {
+        font-style: italic;
+        color: #94a3b8;
+        font-size: 0.58rem;
+      }
+
+      /* ── Legend ──────────────────────────────────────────────── */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 1.25rem;
+        margin-top: 1rem;
+        font-size: 0.8rem;
+        color: #374151;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .legend-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .legend-times {
+        color: #718096;
+        font-size: 0.72rem;
+      }
+
+      .legend-rise {
+        margin-right: 0.15rem;
+      }
+      .legend-set {
+      }
+
+      /* ── Responsive ──────────────────────────────────────────── */
+      @media (max-width: 1000px) {
+        .loc-row {
+          font-size: 0.56rem;
+          gap: 3px;
+        }
+        .day-num {
+          font-size: 0.65rem;
+        }
+      }
+      @media (max-width: 700px) {
+        main {
+          padding: 0 0.35rem;
+        }
+        .day {
+          padding: 0.3rem 0.25rem;
+          gap: 2px;
+        }
+        .day-num {
+          font-size: 0.6rem;
+          width: 16px;
+          height: 16px;
+          margin-bottom: 1px;
+        }
+        /* hide name — color alone identifies the location */
+        .loc-name {
+          display: none;
+        }
+        /* stack rise and set vertically so each cell only needs one time's width */
+        .loc-row {
+          align-items: center;
+          gap: 2px;
+          font-size: 0.58rem;
+        }
+        .loc-times {
+          flex-direction: column;
+          gap: 1px;
+        }
+        .col-header {
+          font-size: 0.62rem;
+          padding: 0.4rem 0.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-title">Sunrise &amp; Sunset Calendar</div>
+      <div class="nav-controls">
+        <button
+          class="nav-btn"
+          onclick="changeMonth(-1)"
+          title="Previous month"
+        >
+          &#8249;
+        </button>
+        <span class="month-label" id="monthLabel"></span>
+        <button class="nav-btn" onclick="changeMonth(1)" title="Next month">
+          &#8250;
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="calendar" id="calendar"></div>
+      <div class="legend" id="legend"></div>
+    </main>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════
+      // Solar calculations — NOAA algorithm
+      // Reference: https://gml.noaa.gov/grad/solcalc/calcdetails.html
+      // ═══════════════════════════════════════════════════════════════
+
+      function sunTimes(year, month1, day, lat, lng) {
+        const JD = Date.UTC(year, month1 - 1, day, 12) / 86400000 + 2440587.5;
+        const T = (JD - 2451545.0) / 36525.0;
+
+        const L0 =
+          (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) % 360;
+        const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
+        const Mr = (M * Math.PI) / 180;
+        const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
+
+        const C =
+          Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+          Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) +
+          Math.sin(3 * Mr) * 0.000289;
+        const sl = L0 + C;
+
+        const om = 125.04 - 1934.136 * T;
+        const lam = sl - 0.00569 - 0.00478 * Math.sin((om * Math.PI) / 180);
+        const lr = (lam * Math.PI) / 180;
+
+        const e0 =
+          23 +
+          (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) /
+            60;
+        const eps =
+          ((e0 + 0.00256 * Math.cos((om * Math.PI) / 180)) * Math.PI) / 180;
+
+        const sinD = Math.sin(eps) * Math.sin(lr);
+        const cosD = Math.cos(Math.asin(sinD));
+
+        const y = Math.tan(eps / 2) ** 2;
+        const L0r = (L0 * Math.PI) / 180;
+        const eot =
+          4 *
+          (180 / Math.PI) *
+          (y * Math.sin(2 * L0r) -
+            2 * e * Math.sin(Mr) +
+            4 * e * y * Math.sin(Mr) * Math.cos(2 * L0r) -
+            0.5 * y * y * Math.sin(4 * L0r) -
+            1.25 * e * e * Math.sin(2 * Mr));
+
+        const latr = (lat * Math.PI) / 180;
+        const cosHA =
+          (Math.sin((-0.8333 * Math.PI) / 180) - Math.sin(latr) * sinD) /
+          (Math.cos(latr) * cosD);
+
+        if (cosHA > 1) return { kind: "night" };
+        if (cosHA < -1) return { kind: "sun" };
+
+        const HA = (Math.acos(cosHA) * 180) / Math.PI;
+        const noon = 720 - 4 * lng - eot;
+        const base = Date.UTC(year, month1 - 1, day);
+        return {
+          kind: "normal",
+          sunrise: new Date(base + (noon - 4 * HA) * 60000),
+          sunset: new Date(base + (noon + 4 * HA) * 60000),
+        };
+      }
+
+      function fmtTime(date, tz) {
+        try {
+          return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: tz,
+          });
+        } catch {
+          return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Color palette — one per location (cycles if > 10)
+      // ═══════════════════════════════════════════════════════════════
+
+      const PALETTE = [
+        "#c0392b", // red
+        "#2980b9", // blue
+        "#e67e22", // orange
+        "#27ae60", // green
+        "#8e44ad", // purple
+        "#16a085", // teal
+        "#d4a017", // gold
+        "#c0547a", // rose
+        "#2c7a4b", // forest
+        "#1a5276", // navy
+      ];
+
+      function colorFor(i) {
+        return PALETTE[i % PALETTE.length];
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // State
+      // ═══════════════════════════════════════════════════════════════
+
+      let locations = [];
+      let highlighted = null;
+
+      const now = new Date();
+      let viewYear = now.getFullYear();
+      let viewMonth = now.getMonth() + 1;
+
+      const MONTHS = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      // ═══════════════════════════════════════════════════════════════
+      // Render
+      // ═══════════════════════════════════════════════════════════════
+
+      function render() {
+        document.getElementById("monthLabel").textContent =
+          `${MONTHS[viewMonth - 1]} ${viewYear}`;
+
+        const firstDow =
+          (new Date(viewYear, viewMonth - 1, 1).getDay() + 6) % 7;
+        const daysInMon = new Date(viewYear, viewMonth, 0).getDate();
+        const prevDays = new Date(viewYear, viewMonth - 1, 0).getDate();
+
+        let html = DAYS.map((d) => `<div class="col-header">${d}</div>`).join(
+          "",
+        );
+
+        // Previous-month padding
+        const [py, pm] =
+          viewMonth === 1 ? [viewYear - 1, 12] : [viewYear, viewMonth - 1];
+        for (let i = 0; i < firstDow; i++)
+          html += dayCell(py, pm, prevDays - firstDow + i + 1, true);
+
+        // Current month
+        for (let d = 1; d <= daysInMon; d++) {
+          const isToday =
+            now.getFullYear() === viewYear &&
+            now.getMonth() + 1 === viewMonth &&
+            now.getDate() === d;
+          html += dayCell(viewYear, viewMonth, d, false, isToday);
+        }
+
+        // Next-month padding
+        const tail = (7 - ((firstDow + daysInMon) % 7)) % 7;
+        const [ny, nm] =
+          viewMonth === 12 ? [viewYear + 1, 1] : [viewYear, viewMonth + 1];
+        for (let d = 1; d <= tail; d++) html += dayCell(ny, nm, d, true);
+
+        document.getElementById("calendar").innerHTML = html;
+        renderLegend();
+      }
+
+      function dayCell(year, month, day, other, isToday = false) {
+        const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        let cls =
+          "day" +
+          (other ? " other" : "") +
+          (isToday ? " today" : "") +
+          (highlighted === key ? " highlighted" : "");
+        let rows = "";
+
+        // Only show data for the current month's days
+        if (!other) {
+          for (let i = 0; i < locations.length; i++) {
+            const loc = locations[i];
+            const color = colorFor(i);
+            const r = sunTimes(year, month, day, loc.lat, loc.lng);
+
+            let content;
+            if (r.kind === "normal") {
+              const sr = fmtTime(r.sunrise, loc.timezone);
+              const ss = fmtTime(r.sunset, loc.timezone);
+              content = `<span class="loc-times">
+            <span class="loc-rise" style="color:${color}">&#8593;${sr}</span>
+            <span class="loc-set"  style="color:${color}">&#8595;${ss}</span>
+          </span>`;
+            } else {
+              const label = r.kind === "night" ? "polar night" : "midnight sun";
+              content = `<span class="loc-special">${label}</span>`;
+            }
+
+            rows += `<div class="loc-row">
+        <span class="loc-dot" style="background:${color}"></span>
+        <span class="loc-name">${esc(loc.name)}</span>
+        ${content}
+      </div>`;
+          }
+        }
+
+        const clickable = other
+          ? ""
+          : ` data-key="${key}" style="cursor:pointer"`;
+        return `<div class="${cls}"${clickable}><div class="day-num">${day}</div>${rows}</div>`;
+      }
+
+      function renderLegend() {
+        const el = document.getElementById("legend");
+        el.innerHTML = locations
+          .map((loc, i) => {
+            const color = colorFor(i);
+            return `<div class="legend-item">
+      <span class="legend-dot" style="background:${color}"></span>
+      <span>${esc(loc.name)}</span>
+      <span class="legend-times">
+        <span class="legend-rise">&#8593; rise</span>
+        &nbsp;
+        <span class="legend-set">&#8595; set</span>
+      </span>
+    </div>`;
+          })
+          .join("");
+      }
+
+      function esc(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Event handlers
+      // ═══════════════════════════════════════════════════════════════
+
+      document.getElementById("calendar").addEventListener("click", (e) => {
+        const cell = e.target.closest("[data-key]");
+        if (!cell) return;
+        const key = cell.dataset.key;
+        highlighted = highlighted === key ? null : key;
+        render();
+      });
+
+      function changeMonth(delta) {
+        viewMonth += delta;
+        if (viewMonth > 12) {
+          viewMonth = 1;
+          viewYear++;
+        }
+        if (viewMonth < 1) {
+          viewMonth = 12;
+          viewYear--;
+        }
+        render();
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Locations
+      // ═══════════════════════════════════════════════════════════════
+
+      locations = [
+        {
+          name: "New York",
+          lat: 40.71,
+          lng: -74,
+          timezone: "America/New_York",
+        },
+        {
+          name: "Los Angeles",
+          lat: 34.0522,
+          lng: -118.2437,
+          timezone: "America/Los_Angeles",
+        },
+        {
+          name: "London",
+          lat: 51.5074,
+          lng: -0.1278,
+          timezone: "Europe/London",
+        },
+        {
+          name: "Paris",
+          lat: 48.8566,
+          lng: 2.3522,
+          timezone: "Europe/Paris",
+        },
+        {
+          name: "Tokyo",
+          lat: 35.6762,
+          lng: 139.6503,
+          timezone: "Asia/Tokyo",
+        },
+        {
+          name: "Sydney",
+          lat: -33.8688,
+          lng: 151.2093,
+          timezone: "Australia/Sydney",
+        },
+        {
+          name: "Reykjavik",
+          lat: 64.1355,
+          lng: -21.8954,
+          timezone: "Atlantic/Reykjavik",
+        },
+        { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
+      ];
+
+      render();
+    </script>
+  </body>
+</html>
