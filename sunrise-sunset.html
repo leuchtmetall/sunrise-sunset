@@ -71,6 +71,31 @@
         background: rgba(255, 255, 255, 0.28);
       }
 
+      .today-btn {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        color: #fff;
+        height: 30px;
+        padding: 0 0.8rem;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.2s,
+          opacity 0.2s;
+        user-select: none;
+      }
+      .today-btn:hover {
+        background: rgba(255, 255, 255, 0.28);
+      }
+      .today-btn.disabled {
+        visibility: hidden;
+      }
+
       .month-label {
         font-size: 1rem;
         font-weight: 600;
@@ -278,6 +303,14 @@
       <div class="header-title">Sunrise &amp; Sunset Calendar</div>
       <div class="nav-controls">
         <button
+          class="today-btn"
+          id="todayBtn"
+          onclick="goToday()"
+          title="Go to current month"
+        >
+          Today
+        </button>
+        <button
           class="nav-btn"
           onclick="changeMonth(-1)"
           title="Previous month"
@@ -435,6 +468,12 @@
       function render() {
         document.getElementById("monthLabel").textContent =
           `${MONTHS[viewMonth - 1]} ${viewYear}`;
+        document
+          .getElementById("todayBtn")
+          .classList.toggle(
+            "disabled",
+            viewYear === now.getFullYear() && viewMonth === now.getMonth() + 1,
+          );
 
         const firstDow =
           (new Date(viewYear, viewMonth - 1, 1).getDay() + 6) % 7;
@@ -554,6 +593,12 @@
         const d = new Date(viewYear, viewMonth - 1 + delta, 1);
         viewYear = d.getFullYear();
         viewMonth = d.getMonth() + 1;
+        render();
+      }
+
+      function goToday() {
+        viewYear = now.getFullYear();
+        viewMonth = now.getMonth() + 1;
         render();
       }
 
