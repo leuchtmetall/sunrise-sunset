@@ -442,8 +442,13 @@
       let highlighted = null;
 
       const now = new Date();
-      let viewYear = now.getFullYear();
-      let viewMonth = now.getMonth() + 1;
+      const today = {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+      };
+      let viewYear = today.year;
+      let viewMonth = today.month;
 
       const MONTHS = [
         "January",
@@ -472,7 +477,7 @@
           .getElementById("todayBtn")
           .classList.toggle(
             "disabled",
-            viewYear === now.getFullYear() && viewMonth === now.getMonth() + 1,
+            viewYear === today.year && viewMonth === today.month,
           );
 
         const firstDow =
@@ -500,9 +505,9 @@
         // Current month
         for (let d = 1; d <= daysInMon; d++) {
           const isToday =
-            now.getFullYear() === viewYear &&
-            now.getMonth() + 1 === viewMonth &&
-            now.getDate() === d;
+            today.year === viewYear &&
+            today.month === viewMonth &&
+            today.day === d;
           html += dayCell(viewYear, viewMonth, d, false, isToday);
         }
 
@@ -608,8 +613,8 @@
       }
 
       function goToday() {
-        viewYear = now.getFullYear();
-        viewMonth = now.getMonth() + 1;
+        viewYear = today.year;
+        viewMonth = today.month;
         render();
       }
 
