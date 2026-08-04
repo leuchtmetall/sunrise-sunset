@@ -253,6 +253,498 @@
         margin-right: 0.15rem;
       }
 
+      /* ── Day details ──────────────────────────────────────────── */
+      .day-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 20px;
+        margin-bottom: 2px;
+      }
+
+      .day-head .day-num {
+        margin-bottom: 0;
+      }
+
+      .info-btn {
+        width: 18px;
+        height: 18px;
+        border: 1px solid #a7b5c7;
+        border-radius: 50%;
+        background: #f8fafc;
+        color: #64748b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Georgia, serif;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      .info-btn:hover {
+        border-color: #486581;
+        background: #e8eef8;
+        color: #243551;
+      }
+
+      .info-btn:focus-visible,
+      .detail-close:focus-visible,
+      .detail-location-toggle:focus-visible {
+        outline: 3px solid rgba(245, 158, 11, 0.55);
+        outline-offset: 2px;
+      }
+
+      .detail-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(13, 27, 42, 0.72);
+      }
+
+      .detail-overlay[hidden] {
+        display: none;
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      .chart-tooltip {
+        position: fixed;
+        z-index: 1100;
+        max-width: min(260px, calc(100vw - 1rem));
+        padding: 0.4rem 0.55rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        background: #243551;
+        color: #fff;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        line-height: 1.25;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      .chart-tooltip[hidden] {
+        display: none;
+      }
+
+      .detail-dialog {
+        width: min(100%, 1040px);
+        max-height: calc(100vh - 2rem);
+        overflow: auto;
+        overscroll-behavior: contain;
+        border-radius: 18px;
+        background: #eef2f7;
+        color: #2d3748;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.4);
+      }
+
+      .detail-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #0d1b2a 0%, #2e4a7a 100%);
+        color: #fff;
+      }
+
+      .detail-eyebrow {
+        margin-bottom: 0.15rem;
+        color: #b8c8e8;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .detail-title {
+        font-size: 1.35rem;
+        line-height: 1.2;
+      }
+
+      .detail-close {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        cursor: pointer;
+        font-size: 1.45rem;
+        line-height: 1;
+      }
+
+      .detail-close:hover {
+        background: rgba(255, 255, 255, 0.28);
+      }
+
+      .detail-content {
+        display: grid;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .detail-location {
+        padding: 1rem;
+        border: 1px solid #d5deea;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
+      }
+
+      .detail-location-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .detail-location-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+      }
+
+      .detail-location-toggle {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        padding: 0;
+        text-align: left;
+      }
+
+      .detail-location-toggle:hover .detail-location-name,
+      .detail-location-toggle:focus-visible .detail-location-name,
+      .detail-location-toggle.is-selected .detail-location-name {
+        color: #243551;
+      }
+
+      .detail-location-toggle.is-muted,
+      .detail-location-toggle.is-line-dimmed {
+        opacity: 0.28;
+      }
+
+      .detail-location-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .detail-location-name {
+        font-size: 1.1rem;
+        line-height: 1.2;
+      }
+
+      .detail-location-zone {
+        margin-top: 0.2rem;
+        color: #718096;
+        font-size: 0.72rem;
+      }
+
+      .detail-status {
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: #edf2f7;
+        color: #52606d;
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .detail-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .detail-metric {
+        min-width: 0;
+        padding: 0.65rem 0.7rem;
+        border-radius: 9px;
+        background: #f4f7fb;
+      }
+
+      .detail-metric-label {
+        display: block;
+        margin-bottom: 0.2rem;
+        color: #718096;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .detail-metric-value {
+        display: block;
+        color: #243551;
+        font-size: 0.95rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      .detail-chart-card {
+        padding: 1rem;
+        border: 1px solid #d5deea;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
+      }
+
+      .detail-chart-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .detail-chart-title {
+        color: #243551;
+        font-size: 1.05rem;
+      }
+
+      .detail-chart-note {
+        color: #718096;
+        font-size: 0.72rem;
+        text-align: right;
+      }
+
+      .chart-location-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.9rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .chart-location-key {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #52606d;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .chart-location-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .detail-event-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.75rem;
+      }
+
+      .chart-event-key {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.28rem 0.5rem;
+        border: 1px solid var(--event-color);
+        border-radius: 999px;
+        background: #fff;
+        color: #52606d;
+        cursor: help;
+        font-size: 0.67rem;
+        font-weight: 600;
+        line-height: 1.2;
+        outline: none;
+      }
+
+      .chart-event-key::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--event-color);
+        content: "";
+      }
+
+      .chart-event-key:hover,
+      .chart-event-key:focus-visible,
+      .chart-event-key.is-active {
+        background: #eef4ff;
+        color: #243551;
+      }
+
+      .chart-event-key.is-focused {
+        box-shadow: 0 0 0 2px rgba(36, 53, 81, 0.16);
+      }
+
+      .chart-event-key.unavailable {
+        cursor: default;
+        opacity: 0.45;
+      }
+
+      .chart-location-key.is-muted,
+      .chart-event-key.is-muted {
+        opacity: 0.28;
+      }
+
+      .chart-location-key.is-focused {
+        color: #243551;
+        font-weight: 800;
+      }
+
+      .sun-chart {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #dbe4ef;
+        border-radius: 10px;
+        background: #f8fafc;
+      }
+
+      .chart-sky {
+        fill: #fff8dc;
+      }
+
+      .chart-night {
+        fill: #e8eef7;
+      }
+
+      .chart-grid {
+        stroke: #dbe4ef;
+        stroke-width: 1;
+      }
+
+      .chart-grid-sixth {
+        opacity: 1;
+        stroke: #aab8c7;
+      }
+
+      .chart-horizon {
+        stroke: #52606d;
+        stroke-width: 1.5;
+      }
+
+      .chart-curve {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2.5;
+        transition:
+          opacity 0.15s,
+          filter 0.15s,
+          stroke-width 0.15s;
+      }
+
+      .chart-curve-hit {
+        fill: none;
+        pointer-events: stroke;
+        stroke: #000;
+        stroke-opacity: 0;
+        stroke-width: 7;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .chart-curve.is-muted,
+      .chart-event-dot.is-muted {
+        opacity: 0.16;
+      }
+
+      .chart-curve.is-line-dimmed {
+        opacity: 0.16;
+      }
+
+      .chart-event-dot.is-line-dimmed {
+        opacity: 0.16;
+      }
+
+      .chart-location-key.is-line-dimmed,
+      .chart-event-key.is-line-dimmed {
+        opacity: 0.28;
+      }
+
+      .chart-event-key.is-line-pinned {
+        opacity: 1;
+      }
+
+      .chart-curve.is-line-pinned {
+        opacity: 1;
+      }
+
+      .chart-curve.is-focused {
+        filter: drop-shadow(0 0 2px rgba(36, 53, 81, 0.5));
+        stroke-width: 3.5;
+      }
+
+      .chart-event-dot {
+        stroke-width: 1.75;
+        transition:
+          r 0.15s,
+          stroke-width 0.15s,
+          filter 0.15s;
+      }
+
+      .chart-event-dot.is-active {
+        filter: drop-shadow(0 0 3px rgba(36, 53, 81, 0.7));
+        stroke-width: 3;
+      }
+
+      .chart-event-dot.is-focused {
+        opacity: 1;
+      }
+
+      .chart-event-tooltip {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+      }
+
+      .chart-event-tooltip.is-line-pinned {
+        opacity: 1;
+      }
+
+      .chart-event-tooltip rect {
+        fill: rgba(36, 53, 81, 0.94);
+        stroke: rgba(255, 255, 255, 0.7);
+        stroke-width: 0.75;
+      }
+
+      .chart-event-tooltip-link {
+        stroke: #52606d;
+        stroke-dasharray: 2 2;
+        stroke-width: 0.75;
+      }
+
+      .chart-event-tooltip text {
+        fill: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 9px;
+        font-weight: 600;
+      }
+
+      .chart-label {
+        fill: #718096;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+      }
+
       /* ── Responsive ──────────────────────────────────────────── */
       @media (max-width: 1000px) {
         .loc-row {
@@ -295,6 +787,42 @@
           font-size: 0.62rem;
           padding: 0.4rem 0.1rem;
         }
+        .info-btn {
+          width: 16px;
+          height: 16px;
+          font-size: 0.65rem;
+        }
+        .detail-overlay {
+          align-items: stretch;
+          padding: 0;
+        }
+        .detail-dialog {
+          width: 100%;
+          max-height: 100vh;
+          border-radius: 0;
+        }
+        .detail-header {
+          padding: 0.9rem 1rem;
+        }
+        .detail-content {
+          padding: 0.7rem;
+        }
+        .detail-location {
+          padding: 0.8rem;
+        }
+        .detail-summary {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .detail-chart-card {
+          padding: 0.8rem;
+        }
+        .detail-chart-heading {
+          display: block;
+        }
+        .detail-chart-note {
+          margin-top: 0.25rem;
+          text-align: left;
+        }
       }
     </style>
   </head>
@@ -329,6 +857,32 @@
       <div class="legend" id="legend"></div>
     </main>
 
+    <div class="detail-overlay" id="detailOverlay" hidden>
+      <section
+        class="detail-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="detailTitle"
+      >
+        <div class="detail-header">
+          <div>
+            <div class="detail-eyebrow">Sun details</div>
+            <h2 class="detail-title" id="detailTitle"></h2>
+          </div>
+          <button
+            class="detail-close"
+            id="detailClose"
+            type="button"
+            aria-label="Close sun details"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="detail-content" id="detailContent"></div>
+      </section>
+      <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
+    </div>
+
     <script>
       // ═══════════════════════════════════════════════════════════════
       // Solar calculations — NOAA algorithm
@@ -336,8 +890,9 @@
       // ═══════════════════════════════════════════════════════════════
 
       const toRad = (deg) => (deg * Math.PI) / 180;
+      const toDeg = (rad) => (rad * 180) / Math.PI;
 
-      function sunTimes(year, month1, day, lat, lng) {
+      function solarData(year, month1, day, lat, lng) {
         const JD = Date.UTC(year, month1 - 1, day, 12) / 86400000 + 2440587.5;
         const T = (JD - 2451545.0) / 36525.0;
 
@@ -379,21 +934,77 @@
             1.25 * e * e * Math.sin(2 * Mr));
 
         const latr = toRad(lat);
+        const base = Date.UTC(year, month1 - 1, day);
+        const noon = 720 - 4 * lng - eot;
+        return { base, noon, sinD, cosD, latr };
+      }
+
+      function eventsAtAltitude(solar, altitude) {
         const cosHA =
-          (Math.sin(toRad(-0.8333)) - Math.sin(latr) * sinD) /
-          (Math.cos(latr) * cosD);
+          (Math.sin(toRad(altitude)) -
+            Math.sin(solar.latr) * solar.sinD) /
+          (Math.cos(solar.latr) * solar.cosD);
 
         if (cosHA > 1) return { kind: "night" };
         if (cosHA < -1) return { kind: "sun" };
 
-        const HA = (Math.acos(cosHA) * 180) / Math.PI;
-        const noon = 720 - 4 * lng - eot;
-        const base = Date.UTC(year, month1 - 1, day);
+        const HA = toDeg(Math.acos(Math.max(-1, Math.min(1, cosHA))));
         return {
           kind: "normal",
-          sunrise: new Date(base + (noon - 4 * HA) * 60000),
-          sunset: new Date(base + (noon + 4 * HA) * 60000),
+          rise: new Date(solar.base + (solar.noon - 4 * HA) * 60000),
+          set: new Date(solar.base + (solar.noon + 4 * HA) * 60000),
         };
+      }
+
+      function solarEvents(year, month1, day, lat, lng) {
+        const solar = solarData(year, month1, day, lat, lng);
+        const horizon = eventsAtAltitude(solar, -0.8333);
+        const civil = eventsAtAltitude(solar, -6);
+        const nautical = eventsAtAltitude(solar, -12);
+        const astronomical = eventsAtAltitude(solar, -18);
+
+        const kind =
+          horizon.kind === "night"
+            ? "night"
+            : horizon.kind === "sun"
+              ? "sun"
+              : "normal";
+        const sunrise = horizon.rise || null;
+        const sunset = horizon.set || null;
+        const dayLength =
+          kind === "sun"
+            ? 24 * 60 * 60 * 1000
+            : kind === "night"
+              ? 0
+              : sunset - sunrise;
+
+        return {
+          kind,
+          sunrise,
+          sunset,
+          solarNoon: new Date(solar.base + solar.noon * 60000),
+          dayLength,
+          civilDawn: civil.rise || null,
+          civilDusk: civil.set || null,
+          nauticalDawn: nautical.rise || null,
+          nauticalDusk: nautical.set || null,
+          astronomicalDawn: astronomical.rise || null,
+          astronomicalDusk: astronomical.set || null,
+          solar,
+        };
+      }
+
+      function sunTimes(year, month1, day, lat, lng) {
+        return solarEvents(year, month1, day, lat, lng);
+      }
+
+      function solarAltitude(solar, date) {
+        const minutes = (date.getTime() - solar.base) / 60000;
+        const hourAngle = toRad((minutes - solar.noon) / 4);
+        const sinAltitude =
+          Math.sin(solar.latr) * solar.sinD +
+          Math.cos(solar.latr) * solar.cosD * Math.cos(hourAngle);
+        return toDeg(Math.asin(Math.max(-1, Math.min(1, sinAltitude))));
       }
 
       function fmtTime(date, tz) {
@@ -433,6 +1044,63 @@
       function colorFor(i) {
         return PALETTE[i % PALETTE.length];
       }
+
+      const EVENT_DEFINITIONS = [
+        {
+          key: "astronomicalDawn",
+          label: "Astronomical dawn",
+          short: "Astro dawn",
+          color: "#334e68",
+        },
+        {
+          key: "nauticalDawn",
+          label: "Nautical dawn",
+          short: "Nautical dawn",
+          color: "#7c8da6",
+        },
+        {
+          key: "civilDawn",
+          label: "Civil dawn",
+          short: "Civil dawn",
+          color: "#f59e0b",
+        },
+        {
+          key: "sunrise",
+          label: "Sunrise",
+          short: "Sunrise",
+          color: "#e67e22",
+        },
+        {
+          key: "solarNoon",
+          label: "Solar noon",
+          short: "Solar noon",
+          color: "#d4a017",
+        },
+        {
+          key: "sunset",
+          label: "Sunset",
+          short: "Sunset",
+          color: "#e67e22",
+        },
+        {
+          key: "civilDusk",
+          label: "Civil dusk",
+          short: "Civil dusk",
+          color: "#f59e0b",
+        },
+        {
+          key: "nauticalDusk",
+          label: "Nautical dusk",
+          short: "Nautical dusk",
+          color: "#7c8da6",
+        },
+        {
+          key: "astronomicalDusk",
+          label: "Astronomical dusk",
+          short: "Astro dusk",
+          color: "#334e68",
+        },
+      ];
 
       // ═══════════════════════════════════════════════════════════════
       // State
@@ -554,7 +1222,8 @@
         const clickable = other
           ? ""
           : ` data-key="${key}" style="cursor:pointer"`;
-        return `<div class="${cls}"${clickable}><div class="day-num">${day}</div>${rows}</div>`;
+        const infoLabel = `View sun details for ${MONTHS[month - 1]} ${day}, ${year}`;
+        return `<div class="${cls}"${clickable}><div class="day-head"><div class="day-num">${day}</div><button class="info-btn" type="button" data-detail-key="${key}" aria-label="${infoLabel}" title="${infoLabel}">i</button></div>${rows}</div>`;
       }
 
       function renderLegend() {
@@ -582,11 +1251,624 @@
           .replace(/>/g, "&gt;");
       }
 
+      function zonedParts(date, tz) {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hourCycle: "h23",
+        }).formatToParts(date);
+        const values = {};
+        for (const part of parts) {
+          if (part.type !== "literal") values[part.type] = Number(part.value);
+        }
+        return values;
+      }
+
+      function zoneOffsetMinutes(date, tz) {
+        const parts = zonedParts(date, tz);
+        const asUTC = Date.UTC(
+          parts.year,
+          parts.month - 1,
+          parts.day,
+          parts.hour,
+          parts.minute,
+          parts.second,
+        );
+        return Math.round((asUTC - date.getTime()) / 60000);
+      }
+
+      function zonedDate(year, month1, day, hour, tz) {
+        const wholeHour = Math.floor(hour);
+        const minute = Math.round((hour - wholeHour) * 60);
+        const wallTime = Date.UTC(
+          year,
+          month1 - 1,
+          day,
+          wholeHour,
+          minute,
+        );
+        let date = new Date(wallTime);
+
+        // Iterating the offset converts a wall-clock time without using the
+        // machine's timezone and also handles ordinary DST transitions.
+        for (let i = 0; i < 3; i++) {
+          date = new Date(wallTime - zoneOffsetMinutes(date, tz) * 60000);
+        }
+        return date;
+      }
+
+      function localHourOnDate(date, year, month1, day, tz) {
+        const parts = zonedParts(date, tz);
+        if (
+          parts.year !== year ||
+          parts.month !== month1 ||
+          parts.day !== day
+        ) {
+          return null;
+        }
+        return parts.hour + parts.minute / 60 + parts.second / 3600;
+      }
+
+      function fmtDetailTime(date, tz) {
+        return date ? fmtTime(date, tz) : "--";
+      }
+
+      function fmtDuration(milliseconds) {
+        if (milliseconds == null) return "--";
+        const totalMinutes = Math.max(0, Math.round(milliseconds / 60000));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = String(totalMinutes % 60).padStart(2, "0");
+        return `${hours}h ${minutes}m`;
+      }
+
+      function parseDateKey(key) {
+        const [year, month, day] = key.split("-").map(Number);
+        return { year, month, day };
+      }
+
+      function dateLabel(year, month1, day) {
+        return `${MONTHS[month1 - 1]} ${day}, ${year}`;
+      }
+
+      function detailEventId(locationIndex, eventKey) {
+        return `location-${locationIndex}-${eventKey}`;
+      }
+
+      function renderEventKeys(locationIndex, loc, data) {
+        return `<div class="detail-event-list" aria-label="Sun and twilight event times">
+          ${EVENT_DEFINITIONS.map((event) => {
+            const date = data[event.key];
+            const time = fmtDetailTime(date, loc.timezone);
+            const unavailable = !date;
+            const eventId = detailEventId(locationIndex, event.key);
+            return `<span class="chart-event-key${unavailable ? " unavailable" : ""}" data-event-id="${eventId}" data-location-index="${locationIndex}" data-tooltip="${event.label}: ${time}" style="--event-color:${event.color}" aria-label="${event.label}: ${time}"${unavailable ? "" : ' tabindex="0"'}>${event.short}</span>`;
+          }).join("")}
+        </div>`;
+      }
+
+      function renderCombinedSunChart(year, month1, day, entries) {
+        const width = 720;
+        const height = 250;
+        const left = 48;
+        const right = 16;
+        const top = 28;
+        const bottom = 216;
+        const horizonY = 132;
+        const plotWidth = width - left - right;
+        const verticalScale = 0.92;
+        const xForHour = (hour) =>
+          left + (Math.max(0, Math.min(24, hour)) / 24) * plotWidth;
+        const yForAltitude = (altitude) =>
+          horizonY - Math.max(-90, Math.min(90, altitude)) * verticalScale;
+
+        const locationLegend = entries
+          .map(
+            ({ loc, index }) => `<span class="chart-location-key" data-location-index="${index}">
+              <span class="chart-location-dot" style="background:${colorFor(index)}"></span>
+              ${esc(loc.name)}
+            </span>`,
+          )
+          .join("");
+
+        const curves = entries
+          .map(({ loc, index, data }) => {
+            const points = [];
+            for (let i = 0; i <= 96; i++) {
+              const hour = (24 * i) / 96;
+              const sample = zonedDate(year, month1, day, hour, loc.timezone);
+              points.push(
+                `${xForHour(hour).toFixed(1)},${yForAltitude(solarAltitude(data.solar, sample)).toFixed(1)}`,
+              );
+            }
+            const path = `M ${points.join(" L ")}`;
+            return `<path class="chart-curve" data-graph-line data-location-index="${index}" style="stroke:${colorFor(index)}" d="${path}"><title>${esc(loc.name)}</title></path>
+              <path class="chart-curve-hit" data-graph-line data-location-index="${index}" d="${path}"></path>`;
+          })
+          .join("");
+
+        const verticalGrid = Array.from({ length: 25 }, (_, hour) => hour)
+          .map((hour) => {
+            const x = xForHour(hour).toFixed(1);
+            return `<line class="chart-grid${hour % 6 === 0 ? " chart-grid-sixth" : ""}" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
+          })
+          .join("");
+        const horizontalGrid = [45, -45]
+          .map((altitude) => {
+            const y = yForAltitude(altitude).toFixed(1);
+            return `<line class="chart-grid" x1="${left}" y1="${y}" x2="${left + plotWidth}" y2="${y}"></line>`;
+          })
+          .join("");
+
+        const tooltipHeight = 17;
+        const tooltipLaneY = {
+          astronomicalDawn: top + 2,
+          nauticalDawn: top + 22,
+          civilDawn: top + 42,
+          sunrise: top + 62,
+          solarNoon: top + 82,
+          sunset: bottom - tooltipHeight - 2,
+          civilDusk: bottom - tooltipHeight - 22,
+          nauticalDusk: bottom - tooltipHeight - 42,
+          astronomicalDusk: bottom - tooltipHeight - 62,
+        };
+
+        const markers = entries
+          .map(({ loc, index, data }) =>
+            EVENT_DEFINITIONS.map((event) => {
+              const date = data[event.key];
+              if (!date) return "";
+              const hour = localHourOnDate(
+                date,
+                year,
+                month1,
+                day,
+                loc.timezone,
+              );
+              if (hour == null) return "";
+              const x = xForHour(hour);
+              const y = yForAltitude(solarAltitude(data.solar, date));
+              const eventId = detailEventId(index, event.key);
+              const time = fmtDetailTime(date, loc.timezone);
+              const radius = event.key === "solarNoon" ? 4 : 3.25;
+              const tooltipWidth = Math.max(
+                40,
+                (event.short.length + time.length + 1) * 4.8 + 10,
+              );
+              const tooltipX = Math.max(
+                left,
+                Math.min(
+                  left + plotWidth - tooltipWidth,
+                  x - tooltipWidth / 2,
+                ),
+              );
+              const tooltipY = tooltipLaneY[event.key];
+              const tooltipCenterX = tooltipX + tooltipWidth / 2;
+              return `<circle class="chart-event-dot" data-event-id="${eventId}" data-location-index="${index}" data-tooltip="${esc(loc.name)} ${event.label}: ${time}" aria-label="${esc(loc.name)} ${event.label}: ${time}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" style="fill:${colorFor(index)};stroke:${event.color}"></circle>
+                <g class="chart-event-tooltip" data-location-index="${index}" aria-label="${event.label}: ${time}">
+                  <line class="chart-event-tooltip-link" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${tooltipCenterX.toFixed(1)}" y2="${(y < tooltipY ? tooltipY + tooltipHeight : tooltipY).toFixed(1)}"></line>
+                  <rect x="${tooltipX.toFixed(1)}" y="${tooltipY.toFixed(1)}" width="${tooltipWidth.toFixed(1)}" height="${tooltipHeight}" rx="4"></rect>
+                  <text x="${tooltipCenterX.toFixed(1)}" y="${(tooltipY + 11.5).toFixed(1)}" text-anchor="middle">${event.short} ${time}</text>
+                </g>`;
+            }).join(""),
+          )
+          .join("");
+
+        const timeLabels = [0, 6, 12, 18, 24]
+          .map((hour) => {
+            const x = xForHour(hour).toFixed(1);
+            return `<text class="chart-label" x="${x}" y="239" text-anchor="middle">${String(hour).padStart(2, "0")}:00</text>`;
+          })
+          .join("");
+
+        return `<div class="detail-chart-card">
+          <div class="detail-chart-heading">
+            <h3 class="detail-chart-title">Sun position by location</h3>
+            <span class="detail-chart-note">Each curve uses its location's local time. Select a location to keep its event tooltips visible.</span>
+          </div>
+          <div class="chart-location-legend">${locationLegend}</div>
+          <svg class="sun-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Sun position chart for all locations">
+            <title>Sun position over the local day for all locations</title>
+            <rect class="chart-sky" x="${left}" y="${top}" width="${plotWidth}" height="${horizonY - top}"></rect>
+            <rect class="chart-night" x="${left}" y="${horizonY}" width="${plotWidth}" height="${bottom - horizonY}"></rect>
+            ${verticalGrid}
+            ${horizontalGrid}
+            <line class="chart-horizon" x1="${left}" y1="${horizonY}" x2="${left + plotWidth}" y2="${horizonY}"></line>
+            <text class="chart-label" x="${left + 6}" y="${top + 14}">above horizon</text>
+            <text class="chart-label" x="${left + 6}" y="${horizonY + 16}">below horizon</text>
+            <text class="chart-label" x="${left - 8}" y="${yForAltitude(45) + 4}" text-anchor="end">+45</text>
+            <text class="chart-label" x="${left - 8}" y="${horizonY + 4}" text-anchor="end">0</text>
+            <text class="chart-label" x="${left - 8}" y="${yForAltitude(-45) + 4}" text-anchor="end">-45</text>
+            ${curves}
+            ${markers}
+            ${timeLabels}
+          </svg>
+        </div>`;
+      }
+
+      function renderDetails(year, month1, day) {
+        const entries = locations.map((loc, index) => ({
+          loc,
+          index,
+          data: sunTimes(year, month1, day, loc.lat, loc.lng),
+        }));
+
+        return `${renderCombinedSunChart(year, month1, day, entries)}${entries
+          .map(({ loc, index, data }) => {
+            const color = colorFor(index);
+            const status =
+              data.kind === "night"
+                ? "Polar night"
+                : data.kind === "sun"
+                  ? "Midnight sun"
+                  : "Daylight cycle";
+
+            return `<article class="detail-location">
+              <div class="detail-location-header">
+                <div>
+                  <button
+                    class="detail-location-heading detail-location-toggle"
+                    type="button"
+                    data-location-toggle="${index}"
+                    data-location-index="${index}"
+                    aria-pressed="false"
+                    aria-label="Toggle ${esc(loc.name)} chart"
+                  >
+                    <span class="detail-location-dot" style="background:${color}"></span>
+                    <span class="detail-location-name">${esc(loc.name)}</span>
+                  </button>
+                  <div class="detail-location-zone">${esc(loc.timezone)}</div>
+                </div>
+                <span class="detail-status">${status}</span>
+              </div>
+              <div class="detail-summary">
+                <div class="detail-metric"><span class="detail-metric-label">Sunrise</span><strong class="detail-metric-value">${fmtDetailTime(data.sunrise, loc.timezone)}</strong></div>
+                <div class="detail-metric"><span class="detail-metric-label">Solar noon</span><strong class="detail-metric-value">${fmtDetailTime(data.solarNoon, loc.timezone)}</strong></div>
+                <div class="detail-metric"><span class="detail-metric-label">Sunset</span><strong class="detail-metric-value">${fmtDetailTime(data.sunset, loc.timezone)}</strong></div>
+                <div class="detail-metric"><span class="detail-metric-label">Day length</span><strong class="detail-metric-value">${fmtDuration(data.dayLength)}</strong></div>
+              </div>
+              ${renderEventKeys(index, loc, data)}
+            </article>`;
+          })
+          .join("")}`;
+      }
+
+      let detailReturnFocus = null;
+      let hoveredLocationIndex = null;
+      let hoveredGraphLine = null;
+      let pinnedGraphLine = null;
+      const detailOverlay = document.getElementById("detailOverlay");
+      const detailDialog = detailOverlay.querySelector(".detail-dialog");
+      const detailClose = document.getElementById("detailClose");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailContent = document.getElementById("detailContent");
+      const chartTooltip = document.getElementById("chartTooltip");
+
+      function closestDataTarget(target, selector) {
+        return target && typeof target.closest === "function"
+          ? target.closest(selector)
+          : null;
+      }
+
+      function showChartTooltip(target) {
+        const text = target.dataset.tooltip;
+        if (!text) return;
+
+        chartTooltip.textContent = text;
+        chartTooltip.hidden = false;
+
+        const rect = target.getBoundingClientRect();
+        const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+        const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+        const gap = 8;
+        const left = Math.max(
+          gap,
+          Math.min(
+            viewportWidth - chartTooltip.offsetWidth - gap,
+            rect.left + rect.width / 2 - chartTooltip.offsetWidth / 2,
+          ),
+        );
+        let top = rect.top - chartTooltip.offsetHeight - gap;
+        if (top < gap) top = rect.bottom + gap;
+        top = Math.min(top, viewportHeight - chartTooltip.offsetHeight - gap);
+        chartTooltip.style.left = `${left}px`;
+        chartTooltip.style.top = `${Math.max(gap, top)}px`;
+      }
+
+      function hideChartTooltip() {
+        chartTooltip.hidden = true;
+      }
+
+      function openDetails(key, opener) {
+        const { year, month, day } = parseDateKey(key);
+        detailTitle.textContent = dateLabel(year, month, day);
+        clearGraphLineState();
+        detailContent.innerHTML = renderDetails(year, month, day);
+        updateLocationToggleState();
+        detailDialog.scrollTop = 0;
+        hideChartTooltip();
+        detailReturnFocus = opener;
+        detailOverlay.hidden = false;
+        document.body.classList.add("modal-open");
+        detailClose.focus();
+      }
+
+      function closeDetails() {
+        if (detailOverlay.hidden) return;
+        hideChartTooltip();
+        clearGraphLineState();
+        detailOverlay.hidden = true;
+        document.body.classList.remove("modal-open");
+        const returnFocus = detailReturnFocus;
+        detailReturnFocus = null;
+        if (returnFocus && document.body.contains(returnFocus)) returnFocus.focus();
+      }
+
+      function setDetailEventActive(eventId, active) {
+        for (const element of detailContent.querySelectorAll(
+          "[data-event-id]",
+        )) {
+          if (element.dataset.eventId === eventId) {
+            element.classList.toggle("is-active", active);
+          }
+        }
+      }
+
+      function applyChartLocationState() {
+        for (const element of detailContent.querySelectorAll(
+          "[data-location-index]",
+        )) {
+          const locationIndex = element.dataset.locationIndex;
+          const isHovered =
+            hoveredLocationIndex != null &&
+            locationIndex === String(hoveredLocationIndex);
+          const isPinned =
+            pinnedGraphLine != null &&
+            locationIndex === String(pinnedGraphLine);
+          const isActive = hoveredLocationIndex != null || isPinned;
+          const isSameLocation =
+            isHovered || isPinned;
+          element.classList.toggle("is-muted", isActive && !isSameLocation);
+          element.classList.toggle("is-focused", isActive && isSameLocation);
+        }
+      }
+
+      function applyGraphLineState() {
+        for (const element of detailContent.querySelectorAll(
+          "[data-graph-line]",
+        )) {
+          const isHovered =
+            hoveredGraphLine != null &&
+            element.dataset.locationIndex === String(hoveredGraphLine);
+          const isPinned =
+            pinnedGraphLine != null &&
+            element.dataset.locationIndex === String(pinnedGraphLine);
+          element.classList.toggle("is-line-hovered", isHovered);
+          element.classList.toggle("is-line-pinned", isPinned);
+          element.classList.toggle(
+            "is-line-dimmed",
+            pinnedGraphLine != null && !isPinned,
+          );
+        }
+
+        for (const element of detailContent.querySelectorAll(
+          "[data-location-index]",
+        )) {
+          const isPinned =
+            pinnedGraphLine != null &&
+            element.dataset.locationIndex === String(pinnedGraphLine);
+          element.classList.toggle(
+            "is-line-dimmed",
+            pinnedGraphLine != null && !isPinned,
+          );
+          element.classList.toggle("is-line-pinned", isPinned);
+        }
+      }
+
+      function updateLocationToggleState() {
+        for (const toggle of detailContent.querySelectorAll(
+          "[data-location-toggle]",
+        )) {
+          const isSelected =
+            pinnedGraphLine != null &&
+            toggle.dataset.locationToggle === String(pinnedGraphLine);
+          toggle.classList.toggle("is-selected", isSelected);
+          toggle.setAttribute("aria-pressed", String(isSelected));
+        }
+      }
+
+      function setChartLocationActive(locationIndex, active) {
+        hoveredLocationIndex = active ? String(locationIndex) : null;
+        applyChartLocationState();
+      }
+
+      function pinGraphLine(locationIndex) {
+        pinnedGraphLine = String(locationIndex);
+        hoveredLocationIndex = null;
+        hoveredGraphLine = null;
+        applyChartLocationState();
+        applyGraphLineState();
+        updateLocationToggleState();
+      }
+
+      function toggleGraphLine(locationIndex) {
+        if (pinnedGraphLine === String(locationIndex)) {
+          clearGraphLineState();
+        } else {
+          pinGraphLine(locationIndex);
+        }
+      }
+
+      function clearGraphLineState() {
+        hoveredLocationIndex = null;
+        hoveredGraphLine = null;
+        pinnedGraphLine = null;
+        applyChartLocationState();
+        applyGraphLineState();
+        updateLocationToggleState();
+      }
+
+      detailContent.addEventListener("pointerover", (e) => {
+        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        if (graphLineTarget) {
+          hoveredGraphLine = graphLineTarget.dataset.locationIndex;
+          applyGraphLineState();
+        }
+
+        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
+        if (eventTarget) {
+          setDetailEventActive(eventTarget.dataset.eventId, true);
+          showChartTooltip(eventTarget);
+        }
+        const locationTarget = closestDataTarget(
+          e.target,
+          "[data-location-index]",
+        );
+        if (locationTarget) {
+          setChartLocationActive(locationTarget.dataset.locationIndex, true);
+        }
+      });
+
+      detailContent.addEventListener("pointerout", (e) => {
+        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        const nextGraphLineTarget = closestDataTarget(
+          e.relatedTarget,
+          "[data-graph-line]",
+        );
+        if (
+          graphLineTarget &&
+          (!nextGraphLineTarget ||
+            nextGraphLineTarget.dataset.locationIndex !==
+              graphLineTarget.dataset.locationIndex)
+        ) {
+          hoveredGraphLine = null;
+          applyGraphLineState();
+        }
+
+        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
+        const nextEventTarget = closestDataTarget(
+          e.relatedTarget,
+          "[data-event-id]",
+        );
+        if (
+          eventTarget &&
+          (!nextEventTarget ||
+            nextEventTarget.dataset.eventId !== eventTarget.dataset.eventId)
+        ) {
+          setDetailEventActive(eventTarget.dataset.eventId, false);
+          hideChartTooltip();
+        }
+
+        const locationTarget = closestDataTarget(
+          e.target,
+          "[data-location-index]",
+        );
+        const nextLocationTarget = closestDataTarget(
+          e.relatedTarget,
+          "[data-location-index]",
+        );
+        if (
+          locationTarget &&
+          (!nextLocationTarget ||
+            nextLocationTarget.dataset.locationIndex !==
+              locationTarget.dataset.locationIndex)
+        ) {
+          setChartLocationActive(locationTarget.dataset.locationIndex, false);
+        }
+      });
+
+      detailContent.addEventListener("focusin", (e) => {
+        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
+        if (eventTarget) {
+          setDetailEventActive(eventTarget.dataset.eventId, true);
+          showChartTooltip(eventTarget);
+        }
+        const locationTarget = closestDataTarget(
+          e.target,
+          "[data-location-index]",
+        );
+        if (locationTarget) {
+          setChartLocationActive(locationTarget.dataset.locationIndex, true);
+        }
+      });
+
+      detailContent.addEventListener("focusout", (e) => {
+        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
+        const nextEventTarget = closestDataTarget(
+          e.relatedTarget,
+          "[data-event-id]",
+        );
+        if (
+          eventTarget &&
+          (!nextEventTarget ||
+            nextEventTarget.dataset.eventId !== eventTarget.dataset.eventId)
+        ) {
+          setDetailEventActive(eventTarget.dataset.eventId, false);
+          hideChartTooltip();
+        }
+
+        const locationTarget = closestDataTarget(
+          e.target,
+          "[data-location-index]",
+        );
+        const nextLocationTarget = closestDataTarget(
+          e.relatedTarget,
+          "[data-location-index]",
+        );
+        if (
+          locationTarget &&
+          (!nextLocationTarget ||
+            nextLocationTarget.dataset.locationIndex !==
+              locationTarget.dataset.locationIndex)
+        ) {
+          setChartLocationActive(locationTarget.dataset.locationIndex, false);
+        }
+      });
+
+      detailContent.addEventListener("click", (e) => {
+        const locationToggle = closestDataTarget(
+          e.target,
+          "[data-location-toggle]",
+        );
+        if (locationToggle) {
+          toggleGraphLine(locationToggle.dataset.locationToggle);
+          return;
+        }
+
+        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        if (graphLineTarget) {
+          pinGraphLine(graphLineTarget.dataset.locationIndex);
+          return;
+        }
+
+        if (closestDataTarget(e.target, "[data-event-id]")) return;
+        if (closestDataTarget(e.target, ".sun-chart")) {
+          clearGraphLineState();
+        }
+      });
+
+      detailDialog.addEventListener("scroll", hideChartTooltip);
+
       // ═══════════════════════════════════════════════════════════════
       // Event handlers
       // ═══════════════════════════════════════════════════════════════
 
+      detailClose.addEventListener("click", closeDetails);
+      detailOverlay.addEventListener("click", (e) => {
+        if (e.target === detailOverlay) closeDetails();
+      });
+
       document.getElementById("calendar").addEventListener("click", (e) => {
+        const info = e.target.closest("[data-detail-key]");
+        if (info) {
+          e.preventDefault();
+          openDetails(info.dataset.detailKey, info);
+          return;
+        }
         const cell = e.target.closest("[data-key]");
         if (!cell) return;
         const key = cell.dataset.key;
@@ -595,6 +1877,11 @@
       });
 
       document.addEventListener("keydown", (e) => {
+        if (!detailOverlay.hidden && e.key === "Escape") {
+          e.preventDefault();
+          closeDetails();
+          return;
+        }
         if (!(e.metaKey || e.ctrlKey)) return;
         if (e.key === "ArrowRight") {
           e.preventDefault();
@@ -606,6 +1893,7 @@
       });
 
       function changeMonth(delta) {
+        closeDetails();
         const d = new Date(viewYear, viewMonth - 1 + delta, 1);
         viewYear = d.getFullYear();
         viewMonth = d.getMonth() + 1;
@@ -613,6 +1901,7 @@
       }
 
       function goToday() {
+        closeDetails();
         viewYear = today.year;
         viewMonth = today.month;
         render();
