@@ -269,10 +269,10 @@
       .info-btn {
         width: 18px;
         height: 18px;
-        border: 1px solid #a7b5c7;
+        border: 1px solid hsl(214, 22%, 85%);
         border-radius: 50%;
-        background: #f8fafc;
-        color: #64748b;
+        background: hsl(210, 40%, 98%);
+        color: hsl(215, 16%, 55%);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -734,14 +734,16 @@
 
       .chart-event-tooltip text {
         fill: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 9px;
         font-weight: 600;
       }
 
       .chart-label {
         fill: #718096;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 11px;
       }
 
@@ -941,8 +943,7 @@
 
       function eventsAtAltitude(solar, altitude) {
         const cosHA =
-          (Math.sin(toRad(altitude)) -
-            Math.sin(solar.latr) * solar.sinD) /
+          (Math.sin(toRad(altitude)) - Math.sin(solar.latr) * solar.sinD) /
           (Math.cos(solar.latr) * solar.cosD);
 
         if (cosHA > 1) return { kind: "night" };
@@ -1223,7 +1224,10 @@
           ? ""
           : ` data-key="${key}" style="cursor:pointer"`;
         const infoLabel = `View sun details for ${MONTHS[month - 1]} ${day}, ${year}`;
-        return `<div class="${cls}"${clickable}><div class="day-head"><div class="day-num">${day}</div><button class="info-btn" type="button" data-detail-key="${key}" aria-label="${infoLabel}" title="${infoLabel}">i</button></div>${rows}</div>`;
+        const infoButton = other
+          ? ""
+          : `<button class="info-btn" type="button" data-detail-key="${key}" aria-label="${infoLabel}" title="${infoLabel}">i</button>`;
+        return `<div class="${cls}"${clickable}><div class="day-head"><div class="day-num">${day}</div>${infoButton}</div>${rows}</div>`;
       }
 
       function renderLegend() {
@@ -1285,13 +1289,7 @@
       function zonedDate(year, month1, day, hour, tz) {
         const wholeHour = Math.floor(hour);
         const minute = Math.round((hour - wholeHour) * 60);
-        const wallTime = Date.UTC(
-          year,
-          month1 - 1,
-          day,
-          wholeHour,
-          minute,
-        );
+        const wallTime = Date.UTC(year, month1 - 1, day, wholeHour, minute);
         let date = new Date(wallTime);
 
         // Iterating the offset converts a wall-clock time without using the
@@ -1368,7 +1366,10 @@
 
         const locationLegend = entries
           .map(
-            ({ loc, index }) => `<span class="chart-location-key" data-location-index="${index}">
+            ({
+              loc,
+              index,
+            }) => `<span class="chart-location-key" data-location-index="${index}">
               <span class="chart-location-dot" style="background:${colorFor(index)}"></span>
               ${esc(loc.name)}
             </span>`,
@@ -1441,10 +1442,7 @@
               );
               const tooltipX = Math.max(
                 left,
-                Math.min(
-                  left + plotWidth - tooltipWidth,
-                  x - tooltipWidth / 2,
-                ),
+                Math.min(left + plotWidth - tooltipWidth, x - tooltipWidth / 2),
               );
               const tooltipY = tooltipLaneY[event.key];
               const tooltipCenterX = tooltipX + tooltipWidth / 2;
@@ -1562,8 +1560,10 @@
         chartTooltip.hidden = false;
 
         const rect = target.getBoundingClientRect();
-        const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-        const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+        const viewportWidth =
+          document.documentElement.clientWidth || window.innerWidth;
+        const viewportHeight =
+          document.documentElement.clientHeight || window.innerHeight;
         const gap = 8;
         const left = Math.max(
           gap,
@@ -1605,7 +1605,8 @@
         document.body.classList.remove("modal-open");
         const returnFocus = detailReturnFocus;
         detailReturnFocus = null;
-        if (returnFocus && document.body.contains(returnFocus)) returnFocus.focus();
+        if (returnFocus && document.body.contains(returnFocus))
+          returnFocus.focus();
       }
 
       function setDetailEventActive(eventId, active) {
@@ -1630,8 +1631,7 @@
             pinnedGraphLine != null &&
             locationIndex === String(pinnedGraphLine);
           const isActive = hoveredLocationIndex != null || isPinned;
-          const isSameLocation =
-            isHovered || isPinned;
+          const isSameLocation = isHovered || isPinned;
           element.classList.toggle("is-muted", isActive && !isSameLocation);
           element.classList.toggle("is-focused", isActive && isSameLocation);
         }
@@ -1713,7 +1713,10 @@
       }
 
       detailContent.addEventListener("pointerover", (e) => {
-        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        const graphLineTarget = closestDataTarget(
+          e.target,
+          "[data-graph-line]",
+        );
         if (graphLineTarget) {
           hoveredGraphLine = graphLineTarget.dataset.locationIndex;
           applyGraphLineState();
@@ -1734,7 +1737,10 @@
       });
 
       detailContent.addEventListener("pointerout", (e) => {
-        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        const graphLineTarget = closestDataTarget(
+          e.target,
+          "[data-graph-line]",
+        );
         const nextGraphLineTarget = closestDataTarget(
           e.relatedTarget,
           "[data-graph-line]",
@@ -1839,7 +1845,10 @@
           return;
         }
 
-        const graphLineTarget = closestDataTarget(e.target, "[data-graph-line]");
+        const graphLineTarget = closestDataTarget(
+          e.target,
+          "[data-graph-line]",
+        );
         if (graphLineTarget) {
           pinGraphLine(graphLineTarget.dataset.locationIndex);
           return;
