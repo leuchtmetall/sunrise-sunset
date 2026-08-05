@@ -18,7 +18,6 @@
           -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #eef2f7;
         color: #2d3748;
-        min-height: 100vh;
       }
 
       /* ── Header ──────────────────────────────────────────────── */
@@ -293,7 +292,8 @@
 
       .info-btn:focus-visible,
       .detail-close:focus-visible,
-      .detail-location-toggle:focus-visible {
+      .chart-location-key:focus-visible,
+      .detail-location:focus-visible {
         outline: 3px solid rgba(245, 158, 11, 0.55);
         outline-offset: 2px;
       }
@@ -400,20 +400,45 @@
         padding: 1rem;
       }
 
-      .detail-location {
-        padding: 1rem;
-        border: 1px solid #d5deea;
-        border-radius: 14px;
-        background: #fff;
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.06);
+      .detail-locations {
+        display: grid;
+        gap: 0.4rem;
       }
 
-      .detail-location-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 0.85rem;
+      .detail-location {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        width: 100%;
+        padding: 0.5rem 0.85rem;
+        border: 1px solid #d5deea;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          opacity 0.15s;
+      }
+
+      .detail-location:hover {
+        border-color: #a9bdd6;
+        background: #f8fbff;
+      }
+
+      .detail-location.is-selected {
+        border-color: #243551;
+        background: #f5f9ff;
+      }
+
+      .detail-location.is-muted,
+      .detail-location.is-line-dimmed {
+        opacity: 0.32;
       }
 
       .detail-location-heading {
@@ -423,24 +448,8 @@
         min-width: 0;
       }
 
-      .detail-location-toggle {
-        border: 0;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        padding: 0;
-        text-align: left;
-      }
-
-      .detail-location-toggle:hover .detail-location-name,
-      .detail-location-toggle:focus-visible .detail-location-name,
-      .detail-location-toggle.is-selected .detail-location-name {
-        color: #243551;
-      }
-
-      .detail-location-toggle.is-muted,
-      .detail-location-toggle.is-line-dimmed {
-        opacity: 0.28;
+      .detail-location-labels {
+        min-width: 0;
       }
 
       .detail-location-dot {
@@ -451,55 +460,50 @@
       }
 
       .detail-location-name {
-        font-size: 1.1rem;
-        line-height: 1.2;
-      }
-
-      .detail-location-zone {
-        margin-top: 0.2rem;
-        color: #718096;
-        font-size: 0.72rem;
-      }
-
-      .detail-status {
-        padding: 0.25rem 0.55rem;
-        border-radius: 999px;
-        background: #edf2f7;
-        color: #52606d;
-        font-size: 0.7rem;
+        display: block;
+        overflow: hidden;
+        color: #243551;
+        font-size: 0.95rem;
         font-weight: 700;
+        line-height: 1.2;
+        text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .detail-summary {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 0.8rem;
+      .detail-location-zone {
+        display: block;
+        overflow: hidden;
+        color: #718096;
+        font-size: 0.68rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .detail-location-note {
+        color: #b45309;
+        font-weight: 700;
       }
 
       .detail-metric {
+        display: flex;
         min-width: 0;
-        padding: 0.65rem 0.7rem;
-        border-radius: 9px;
-        background: #f4f7fb;
+        flex-direction: column;
+        gap: 1px;
       }
 
       .detail-metric-label {
-        display: block;
-        margin-bottom: 0.2rem;
-        color: #718096;
-        font-size: 0.65rem;
+        color: #8797ab;
+        font-size: 0.58rem;
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
       }
 
       .detail-metric-value {
-        display: block;
         color: #243551;
-        font-size: 0.95rem;
+        font-size: 0.88rem;
         font-variant-numeric: tabular-nums;
+        font-weight: 600;
         white-space: nowrap;
       }
 
@@ -533,7 +537,7 @@
       .chart-location-legend {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem 0.9rem;
+        gap: 0.35rem 0.5rem;
         margin-bottom: 0.75rem;
       }
 
@@ -541,67 +545,42 @@
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid #d5deea;
+        border-radius: 999px;
+        background: #fff;
         color: #52606d;
+        cursor: pointer;
+        font: inherit;
         font-size: 0.72rem;
         font-weight: 600;
+        line-height: 1.3;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          opacity 0.15s;
+      }
+
+      .chart-location-key:hover {
+        border-color: #a9bdd6;
+        background: #f1f6ff;
+        color: #243551;
+      }
+
+      .chart-location-key.is-selected {
+        border-color: #243551;
+        background: #eef4ff;
+        color: #243551;
       }
 
       .chart-location-dot {
         width: 8px;
         height: 8px;
         border-radius: 50%;
+        flex-shrink: 0;
       }
 
-      .detail-event-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-top: 0.75rem;
-      }
-
-      .chart-event-key {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.28rem 0.5rem;
-        border: 1px solid var(--event-color);
-        border-radius: 999px;
-        background: #fff;
-        color: #52606d;
-        cursor: help;
-        font-size: 0.67rem;
-        font-weight: 600;
-        line-height: 1.2;
-        outline: none;
-      }
-
-      .chart-event-key::before {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--event-color);
-        content: "";
-      }
-
-      .chart-event-key:hover,
-      .chart-event-key:focus-visible,
-      .chart-event-key.is-active {
-        background: #eef4ff;
-        color: #243551;
-      }
-
-      .chart-event-key.is-focused {
-        box-shadow: 0 0 0 2px rgba(36, 53, 81, 0.16);
-      }
-
-      .chart-event-key.unavailable {
-        cursor: default;
-        opacity: 0.45;
-      }
-
-      .chart-location-key.is-muted,
-      .chart-event-key.is-muted {
+      .chart-location-key.is-muted {
         opacity: 0.28;
       }
 
@@ -675,13 +654,8 @@
         opacity: 0.16;
       }
 
-      .chart-location-key.is-line-dimmed,
-      .chart-event-key.is-line-dimmed {
+      .chart-location-key.is-line-dimmed {
         opacity: 0.28;
-      }
-
-      .chart-event-key.is-line-pinned {
-        opacity: 1;
       }
 
       .chart-curve.is-line-pinned {
@@ -694,7 +668,7 @@
       }
 
       .chart-event-dot {
-        stroke-width: 1.75;
+        stroke-width: 0.9;
         transition:
           r 0.15s,
           stroke-width 0.15s,
@@ -703,7 +677,7 @@
 
       .chart-event-dot.is-active {
         filter: drop-shadow(0 0 3px rgba(36, 53, 81, 0.7));
-        stroke-width: 3;
+        stroke-width: 1.6;
       }
 
       .chart-event-dot.is-focused {
@@ -810,10 +784,11 @@
           padding: 0.7rem;
         }
         .detail-location {
-          padding: 0.8rem;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          padding: 0.6rem 0.7rem;
         }
-        .detail-summary {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .detail-location-heading {
+          grid-column: 1 / -1;
         }
         .detail-chart-card {
           padding: 0.8rem;
@@ -1337,42 +1312,50 @@
         return `location-${locationIndex}-${eventKey}`;
       }
 
-      function renderEventKeys(locationIndex, loc, data) {
-        return `<div class="detail-event-list" aria-label="Sun and twilight event times">
-          ${EVENT_DEFINITIONS.map((event) => {
-            const date = data[event.key];
-            const time = fmtDetailTime(date, loc.timezone);
-            const unavailable = !date;
-            const eventId = detailEventId(locationIndex, event.key);
-            return `<span class="chart-event-key${unavailable ? " unavailable" : ""}" data-event-id="${eventId}" data-location-index="${locationIndex}" data-tooltip="${event.label}: ${time}" style="--event-color:${event.color}" aria-label="${event.label}: ${time}"${unavailable ? "" : ' tabindex="0"'}>${event.short}</span>`;
-          }).join("")}
-        </div>`;
+      // Chart geometry — shared so pointer positions can be mapped back to hours.
+      const CHART = {
+        width: 720,
+        height: 250,
+        left: 48,
+        right: 16,
+        top: 28,
+        bottom: 216,
+        horizonY: 132,
+        verticalScale: 0.92,
+      };
+      CHART.plotWidth = CHART.width - CHART.left - CHART.right;
+
+      const xForHour = (hour) =>
+        CHART.left + (Math.max(0, Math.min(24, hour)) / 24) * CHART.plotWidth;
+      const hourForX = (x) =>
+        Math.max(0, Math.min(24, ((x - CHART.left) / CHART.plotWidth) * 24));
+      const yForAltitude = (altitude) =>
+        CHART.horizonY -
+        Math.max(-90, Math.min(90, altitude)) * CHART.verticalScale;
+
+      function fmtHour(hour) {
+        const total = Math.round(Math.max(0, Math.min(24, hour)) * 60);
+        const hours = String(Math.floor(total / 60)).padStart(2, "0");
+        const minutes = String(total % 60).padStart(2, "0");
+        return `${hours}:${minutes}`;
       }
 
       function renderCombinedSunChart(year, month1, day, entries) {
-        const width = 720;
-        const height = 250;
-        const left = 48;
-        const right = 16;
-        const top = 28;
-        const bottom = 216;
-        const horizonY = 132;
-        const plotWidth = width - left - right;
-        const verticalScale = 0.92;
-        const xForHour = (hour) =>
-          left + (Math.max(0, Math.min(24, hour)) / 24) * plotWidth;
-        const yForAltitude = (altitude) =>
-          horizonY - Math.max(-90, Math.min(90, altitude)) * verticalScale;
+        const { width, height, left, top, bottom, horizonY, plotWidth } = CHART;
 
         const locationLegend = entries
           .map(
-            ({
-              loc,
-              index,
-            }) => `<span class="chart-location-key" data-location-index="${index}">
+            ({ loc, index }) => `<button
+              class="chart-location-key"
+              type="button"
+              data-location-toggle="${index}"
+              data-location-index="${index}"
+              aria-pressed="false"
+              aria-label="Highlight ${esc(loc.name)} on the chart"
+            >
               <span class="chart-location-dot" style="background:${colorFor(index)}"></span>
               ${esc(loc.name)}
-            </span>`,
+            </button>`,
           )
           .join("");
 
@@ -1387,7 +1370,7 @@
               );
             }
             const path = `M ${points.join(" L ")}`;
-            return `<path class="chart-curve" data-graph-line data-location-index="${index}" style="stroke:${colorFor(index)}" d="${path}"><title>${esc(loc.name)}</title></path>
+            return `<path class="chart-curve" data-graph-line data-location-index="${index}" style="stroke:${colorFor(index)}" d="${path}" aria-label="${esc(loc.name)}"></path>
               <path class="chart-curve-hit" data-graph-line data-location-index="${index}" d="${path}"></path>`;
           })
           .join("");
@@ -1466,7 +1449,7 @@
         return `<div class="detail-chart-card">
           <div class="detail-chart-heading">
             <h3 class="detail-chart-title">Sun position by location</h3>
-            <span class="detail-chart-note">Each curve uses its location's local time. Select a location to keep its event tooltips visible.</span>
+            <span class="detail-chart-note">Each curve uses its location's local time. Click a location to keep its event times visible.</span>
           </div>
           <div class="chart-location-legend">${locationLegend}</div>
           <svg class="sun-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Sun position chart for all locations">
@@ -1495,50 +1478,47 @@
           data: sunTimes(year, month1, day, loc.lat, loc.lng),
         }));
 
-        return `${renderCombinedSunChart(year, month1, day, entries)}${entries
+        const rows = entries
           .map(({ loc, index, data }) => {
             const color = colorFor(index);
-            const status =
+            const note =
               data.kind === "night"
                 ? "Polar night"
                 : data.kind === "sun"
                   ? "Midnight sun"
-                  : "Daylight cycle";
+                  : "";
 
-            return `<article class="detail-location">
-              <div class="detail-location-header">
-                <div>
-                  <button
-                    class="detail-location-heading detail-location-toggle"
-                    type="button"
-                    data-location-toggle="${index}"
-                    data-location-index="${index}"
-                    aria-pressed="false"
-                    aria-label="Toggle ${esc(loc.name)} chart"
-                  >
-                    <span class="detail-location-dot" style="background:${color}"></span>
-                    <span class="detail-location-name">${esc(loc.name)}</span>
-                  </button>
-                  <div class="detail-location-zone">${esc(loc.timezone)}</div>
-                </div>
-                <span class="detail-status">${status}</span>
-              </div>
-              <div class="detail-summary">
-                <div class="detail-metric"><span class="detail-metric-label">Sunrise</span><strong class="detail-metric-value">${fmtDetailTime(data.sunrise, loc.timezone)}</strong></div>
-                <div class="detail-metric"><span class="detail-metric-label">Solar noon</span><strong class="detail-metric-value">${fmtDetailTime(data.solarNoon, loc.timezone)}</strong></div>
-                <div class="detail-metric"><span class="detail-metric-label">Sunset</span><strong class="detail-metric-value">${fmtDetailTime(data.sunset, loc.timezone)}</strong></div>
-                <div class="detail-metric"><span class="detail-metric-label">Day length</span><strong class="detail-metric-value">${fmtDuration(data.dayLength)}</strong></div>
-              </div>
-              ${renderEventKeys(index, loc, data)}
-            </article>`;
+            return `<button
+              class="detail-location"
+              type="button"
+              data-location-toggle="${index}"
+              data-location-index="${index}"
+              aria-pressed="false"
+              aria-label="Highlight ${esc(loc.name)} on the chart"
+            >
+              <span class="detail-location-heading">
+                <span class="detail-location-dot" style="background:${color}"></span>
+                <span class="detail-location-labels">
+                  <span class="detail-location-name">${esc(loc.name)}</span>
+                  <span class="detail-location-zone">${esc(loc.timezone)}${note ? ` &middot; <span class="detail-location-note">${note}</span>` : ""}</span>
+                </span>
+              </span>
+              <span class="detail-metric"><span class="detail-metric-label">Sunrise</span><span class="detail-metric-value">${fmtDetailTime(data.sunrise, loc.timezone)}</span></span>
+              <span class="detail-metric"><span class="detail-metric-label">Solar noon</span><span class="detail-metric-value">${fmtDetailTime(data.solarNoon, loc.timezone)}</span></span>
+              <span class="detail-metric"><span class="detail-metric-label">Sunset</span><span class="detail-metric-value">${fmtDetailTime(data.sunset, loc.timezone)}</span></span>
+              <span class="detail-metric"><span class="detail-metric-label">Day length</span><span class="detail-metric-value">${fmtDuration(data.dayLength)}</span></span>
+            </button>`;
           })
-          .join("")}`;
+          .join("");
+
+        return `${renderCombinedSunChart(year, month1, day, entries)}<div class="detail-locations">${rows}</div>`;
       }
 
       let detailReturnFocus = null;
       let hoveredLocationIndex = null;
       let hoveredGraphLine = null;
       let pinnedGraphLine = null;
+      let chartTooltipSource = null;
       const detailOverlay = document.getElementById("detailOverlay");
       const detailDialog = detailOverlay.querySelector(".detail-dialog");
       const detailClose = document.getElementById("detailClose");
@@ -1552,14 +1532,10 @@
           : null;
       }
 
-      function showChartTooltip(target) {
-        const text = target.dataset.tooltip;
-        if (!text) return;
-
+      function placeChartTooltip(text, centerX, topEdge, bottomEdge) {
         chartTooltip.textContent = text;
         chartTooltip.hidden = false;
 
-        const rect = target.getBoundingClientRect();
         const viewportWidth =
           document.documentElement.clientWidth || window.innerWidth;
         const viewportHeight =
@@ -1569,18 +1545,54 @@
           gap,
           Math.min(
             viewportWidth - chartTooltip.offsetWidth - gap,
-            rect.left + rect.width / 2 - chartTooltip.offsetWidth / 2,
+            centerX - chartTooltip.offsetWidth / 2,
           ),
         );
-        let top = rect.top - chartTooltip.offsetHeight - gap;
-        if (top < gap) top = rect.bottom + gap;
+        let top = topEdge - chartTooltip.offsetHeight - gap;
+        if (top < gap) top = bottomEdge + gap;
         top = Math.min(top, viewportHeight - chartTooltip.offsetHeight - gap);
         chartTooltip.style.left = `${left}px`;
         chartTooltip.style.top = `${Math.max(gap, top)}px`;
       }
 
+      function showChartTooltip(target) {
+        const text = target.dataset.tooltip;
+        if (!text) return;
+
+        chartTooltipSource = "event";
+        const rect = target.getBoundingClientRect();
+        placeChartTooltip(
+          text,
+          rect.left + rect.width / 2,
+          rect.top,
+          rect.bottom,
+        );
+      }
+
+      // Hover-only readout: the local time at the pointer's position on a curve.
+      function showGraphLineTooltip(target, clientX, clientY) {
+        const svg = target.ownerSVGElement || target.closest(".sun-chart");
+        const loc = locations[Number(target.dataset.locationIndex)];
+        if (!svg || !loc) return;
+
+        const rect = svg.getBoundingClientRect();
+        if (!rect.width) return;
+
+        const hour = hourForX(
+          ((clientX - rect.left) / rect.width) * CHART.width,
+        );
+        chartTooltipSource = "line";
+        placeChartTooltip(
+          `${loc.name} ${fmtHour(hour)}`,
+          clientX,
+          clientY - 6,
+          clientY + 18,
+        );
+      }
+
       function hideChartTooltip() {
         chartTooltip.hidden = true;
+        chartTooltipSource = null;
       }
 
       function openDetails(key, opener) {
@@ -1720,6 +1732,7 @@
         if (graphLineTarget) {
           hoveredGraphLine = graphLineTarget.dataset.locationIndex;
           applyGraphLineState();
+          showGraphLineTooltip(graphLineTarget, e.clientX, e.clientY);
         }
 
         const eventTarget = closestDataTarget(e.target, "[data-event-id]");
@@ -1733,6 +1746,19 @@
         );
         if (locationTarget) {
           setChartLocationActive(locationTarget.dataset.locationIndex, true);
+        }
+      });
+
+      detailContent.addEventListener("pointermove", (e) => {
+        if (closestDataTarget(e.target, "[data-event-id]")) return;
+        const graphLineTarget = closestDataTarget(
+          e.target,
+          "[data-graph-line]",
+        );
+        if (graphLineTarget) {
+          showGraphLineTooltip(graphLineTarget, e.clientX, e.clientY);
+        } else if (chartTooltipSource === "line") {
+          hideChartTooltip();
         }
       });
 
@@ -1753,6 +1779,9 @@
         ) {
           hoveredGraphLine = null;
           applyGraphLineState();
+        }
+        if (graphLineTarget && !nextGraphLineTarget) {
+          if (chartTooltipSource === "line") hideChartTooltip();
         }
 
         const eventTarget = closestDataTarget(e.target, "[data-event-id]");
