@@ -572,10 +572,17 @@
         color: #243551;
       }
 
-      .chart-location-key.is-selected {
+      .chart-location-key.is-selected,
+      .chart-location-key[aria-pressed="true"] {
         border-color: #243551;
         background: #eef4ff;
         color: #243551;
+      }
+
+      .detail-chart-heading-side {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
       }
 
       .chart-location-dot {
@@ -619,6 +626,15 @@
       .chart-grid-sixth {
         opacity: 1;
         stroke: #aab8c7;
+      }
+
+      .chart-grid-zone {
+        stroke-width: 1;
+        opacity: 0.7;
+      }
+
+      .chart-label-zone {
+        font-weight: 700;
       }
 
       .chart-horizon {
@@ -1345,8 +1361,36 @@
         return `${hours}:${minutes}`;
       }
 
+      function solarNoonShiftHours(entry, year, month1, day) {
+        const noon = entry.data.solarNoon;
+        if (!noon) return 0;
+        const noonHour = localHourOnDate(
+          noon,
+          year,
+          month1,
+          day,
+          entry.loc.timezone,
+        );
+        return noonHour == null ? 0 : 12 - noonHour;
+      }
+
+      const rawXForDisplayHour = (displayHour) =>
+        CHART.left + (displayHour / 24) * CHART.plotWidth;
+
       function renderCombinedSunChart(year, month1, day, entries) {
         const { width, height, left, top, bottom, horizonY, plotWidth } = CHART;
+        const shifts = new Map(
+          entries.map((entry) => [
+            entry.index,
+            alignToSolarNoon
+              ? solarNoonShiftHours(entry, year, month1, day)
+              : 0,
+          ]),
+        );
+        const xForShiftedHour = (index, hour) =>
+          alignToSolarNoon
+            ? rawXForDisplayHour(hour + shifts.get(index))
+            : xForHour(hour);
 
         const locationLegend = entries
           .map(
@@ -1371,7 +1415,7 @@
               const hour = (24 * i) / 96;
               const sample = zonedDate(year, month1, day, hour, loc.timezone);
               points.push(
-                `${xForHour(hour).toFixed(1)},${yForAltitude(solarAltitude(data.solar, sample)).toFixed(1)}`,
+                `${xForShiftedHour(index, hour).toFixed(1)},${yForAltitude(solarAltitude(data.solar, sample)).toFixed(1)}`,
               );
             }
             const path = `M ${points.join(" L ")}`;
@@ -1380,12 +1424,66 @@
           })
           .join("");
 
-        const verticalGrid = Array.from({ length: 25 }, (_, hour) => hour)
-          .map((hour) => {
-            const x = xForHour(hour).toFixed(1);
-            return `<line class="chart-grid${hour % 6 === 0 ? " chart-grid-sixth" : ""}" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
-          })
-          .join("");
+        let verticalGrid = "";
+        let timeLabels = "";
+        let axisHeight = CHART.height;
+        // One grid/label set per distinct timezone: each zone's whole local
+        // hours land at their solar-noon-relative position on the axis.
+        const zones = [];
+        const seen = new Set();
+        for (const entry of entries) {
+          if (seen.has(entry.loc.timezone)) continue;
+          seen.add(entry.loc.timezone);
+          zones.push({
+            timezone: entry.loc.timezone,
+            shift: shifts.get(entry.index),
+            color: colorFor(entry.index),
+          });
+        }
+        if (alignToSolarNoon) {
+          axisHeight = 239 + zones.length * 12 + 2;
+          verticalGrid = zones
+            .map(({ shift, color }) =>
+              [0, 6, 12, 18, 24]
+                .map((hour) => {
+                  const displayHour = hour + shift;
+                  if (displayHour < 0 || displayHour > 24) return "";
+                  const x = rawXForDisplayHour(displayHour).toFixed(1);
+                  return `<line class="chart-grid chart-grid-zone" style="stroke:${color};stroke-width:1;opacity:0.7" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
+                })
+                .join(""),
+            )
+            .join("");
+          verticalGrid += `<line class="chart-grid chart-grid-sixth" x1="${xForHour(12)}" y1="${top}" x2="${xForHour(12)}" y2="${bottom}"></line>`;
+          timeLabels = zones
+            .map(({ timezone, shift, color }, zoneIndex) => {
+              const zoneName = timezone.split("/").pop().replace(/_/g, " ");
+              const labelY = 239 + zoneIndex * 12;
+              return [0, 6, 12, 18, 24]
+                .map((hour) => {
+                  const displayHour = hour + shift;
+                  if (displayHour < 0 || displayHour > 24) return "";
+                  const x = rawXForDisplayHour(displayHour).toFixed(1);
+                  const suffix = hour === 12 ? ` ${zoneName}` : "";
+                  return `<text class="chart-label chart-label-zone" style="fill:${color}" x="${x}" y="${labelY}" text-anchor="middle">${fmtHour(hour)}${suffix}</text>`;
+                })
+                .join("");
+            })
+            .join("");
+        } else {
+          verticalGrid = Array.from({ length: 25 }, (_, hour) => hour)
+            .map((hour) => {
+              const x = xForHour(hour).toFixed(1);
+              return `<line class="chart-grid${hour % 6 === 0 ? " chart-grid-sixth" : ""}" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
+            })
+            .join("");
+          timeLabels = [0, 6, 12, 18, 24]
+            .map((hour) => {
+              const x = xForHour(hour).toFixed(1);
+              return `<text class="chart-label" x="${x}" y="239" text-anchor="middle">${String(hour).padStart(2, "0")}:00</text>`;
+            })
+            .join("");
+        }
         const horizontalGrid = [45, -45]
           .map((altitude) => {
             const y = yForAltitude(altitude).toFixed(1);
@@ -1419,7 +1517,7 @@
                 loc.timezone,
               );
               if (hour == null) return "";
-              const x = xForHour(hour);
+              const x = xForShiftedHour(index, hour);
               const y = yForAltitude(solarAltitude(data.solar, date));
               const eventId = detailEventId(index, event.key);
               const time = fmtDetailTime(date, loc.timezone);
@@ -1444,20 +1542,24 @@
           )
           .join("");
 
-        const timeLabels = [0, 6, 12, 18, 24]
-          .map((hour) => {
-            const x = xForHour(hour).toFixed(1);
-            return `<text class="chart-label" x="${x}" y="239" text-anchor="middle">${String(hour).padStart(2, "0")}:00</text>`;
-          })
-          .join("");
-
         return `<div class="detail-chart-card">
           <div class="detail-chart-heading">
             <h3 class="detail-chart-title">Sun position by location</h3>
-            <span class="detail-chart-note">Each curve uses its location's local time. Click a location to keep its event times visible.</span>
+            <span class="detail-chart-heading-side">
+              <button
+                class="chart-location-key"
+                type="button"
+                data-chart-align
+                aria-pressed="${alignToSolarNoon}"
+                aria-label="Align curves so solar noon is centered"
+              >
+                Align to solar noon
+              </button>
+              <span class="detail-chart-note">${alignToSolarNoon ? "Curves centered on each location\u2019s solar noon; grid lines show every timezone\u2019s local hours." : "Each curve uses its location\u2019s local time. Click a location to keep its event times visible."}</span>
+            </span>
           </div>
           <div class="chart-location-legend">${locationLegend}</div>
-          <svg class="sun-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Sun position chart for all locations">
+          <svg class="sun-chart" viewBox="0 0 ${width} ${axisHeight}" role="img" aria-label="Sun position chart for all locations">
             <title>Sun position over the local day for all locations</title>
             <rect class="chart-sky" x="${left}" y="${top}" width="${plotWidth}" height="${horizonY - top}"></rect>
             <rect class="chart-night" x="${left}" y="${horizonY}" width="${plotWidth}" height="${bottom - horizonY}"></rect>
@@ -1476,12 +1578,14 @@
         </div>`;
       }
 
-      function renderDetails(year, month1, day) {
-        const entries = locations.map((loc, index) => ({
-          loc,
-          index,
-          data: sunTimes(year, month1, day, loc.lat, loc.lng),
-        }));
+      function renderDetails(year, month1, day, entriesArg) {
+        const entries =
+          entriesArg ||
+          locations.map((loc, index) => ({
+            loc,
+            index,
+            data: sunTimes(year, month1, day, loc.lat, loc.lng),
+          }));
 
         const rows = entries
           .map(({ loc, index, data }) => {
@@ -1523,6 +1627,11 @@
       let hoveredLocationIndex = null;
       let hoveredGraphLine = null;
       let pinnedGraphLine = null;
+      let alignToSolarNoon = false;
+      let detailYear = null;
+      let detailMonth = null;
+      let detailDay = null;
+      let detailEntries = null;
       let chartTooltipSource = null;
       const detailOverlay = document.getElementById("detailOverlay");
       const detailDialog = detailOverlay.querySelector(".detail-dialog");
@@ -1602,9 +1711,18 @@
 
       function openDetails(key, opener) {
         const { year, month, day } = parseDateKey(key);
+        detailYear = year;
+        detailMonth = month;
+        detailDay = day;
         detailTitle.textContent = dateLabel(year, month, day);
         clearGraphLineState();
-        detailContent.innerHTML = renderDetails(year, month, day);
+        const entries = locations.map((loc, index) => ({
+          loc,
+          index,
+          data: sunTimes(year, month, day, loc.lat, loc.lng),
+        }));
+        detailEntries = entries;
+        detailContent.innerHTML = renderDetails(year, month, day, entries);
         updateLocationToggleState();
         detailDialog.scrollTop = 0;
         hideChartTooltip();
@@ -1895,6 +2013,27 @@
       });
 
       detailDialog.addEventListener("scroll", hideChartTooltip);
+
+      detailContent.addEventListener("click", (e) => {
+        if (!closestDataTarget(e.target, "[data-chart-align]")) return;
+        alignToSolarNoon = !alignToSolarNoon;
+        if (detailYear == null) return;
+        {
+          const focusBefore = document.activeElement;
+          detailContent.innerHTML = renderDetails(
+            detailYear,
+            detailMonth,
+            detailDay,
+          );
+          updateLocationToggleState();
+          applyGraphLineState();
+          hideChartTooltip();
+          if (focusBefore && focusBefore.isConnected)
+            (
+              detailContent.querySelector("[data-chart-align]") || focusBefore
+            ).focus();
+        }
+      });
 
       // ═══════════════════════════════════════════════════════════════
       // Event handlers
