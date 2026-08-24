@@ -295,6 +295,28 @@
         color: #243551;
       }
 
+      .day-head-end {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+
+      .season-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: hsl(42, 90%, 88%);
+        color: hsl(28, 75%, 40%);
+        font-size: 0.58rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
       .info-btn:focus-visible,
       .detail-close:focus-visible,
       .chart-location-key:focus-visible,
@@ -343,8 +365,13 @@
       .chart-tooltip[hidden] {
         display: none;
       }
-
-      .detail-dialog {
+      <div
+        class="chart-tooltip"
+        id="calendarTooltip"
+        role="tooltip"
+        hidden
+        > </div
+        > .detail-dialog {
         width: min(100%, 1040px);
         max-height: calc(100vh - 2rem);
         overflow: auto;
@@ -880,6 +907,7 @@
       </section>
       <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
     </div>
+    <div class="chart-tooltip" id="calendarTooltip" role="tooltip" hidden></div>
 
     <script>
       // ═══════════════════════════════════════════════════════════════
@@ -951,6 +979,110 @@
           rise: new Date(solar.base + (solar.noon - 4 * HA) * 60000),
           set: new Date(solar.base + (solar.noon + 4 * HA) * 60000),
         };
+      }
+
+      // Solstice/equinox detection: the event happens when the sun's apparent
+      // ecliptic longitude crosses 0/90/180/270 degrees. The crossing is
+      // bracketed by comparing the longitude at successive hours, then refined
+      // to the minute; the result is returned as a UTC Date.
+      function findSeasonEvent(year, month1, day) {
+        const lambdaAt = (date) => {
+          const jd = date.getTime() / 86400000 + 2440587.5;
+          const T = (jd - 2451545.0) / 36525.0;
+          const L0 =
+            (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) %
+            360;
+          const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
+          const Mr = toRad(M);
+          const C =
+            Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+            Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) +
+            Math.sin(3 * Mr) * 0.000289;
+          const omr = toRad(125.04 - 1934.136 * T);
+          return (
+            (((L0 + C - 0.00569 - 0.00478 * Math.sin(omr)) % 360) + 360) % 360
+          );
+        };
+        for (const [angle, name] of [
+          [0, "Equinox"],
+          [90, "Solstice"],
+          [180, "Equinox"],
+          [270, "Solstice"],
+        ]) {
+          let prevDelta = null;
+          for (let h = 0; h <= 24; h++) {
+            const date = new Date(Date.UTC(year, month1 - 1, day, h));
+            // Wrap-aware signed distance to the target angle. For solstices
+            // (90/270) the longitude moves monotonically upward through the
+            // angle; for equinoxes (0/180) it also only increases past the
+            // angle within the day, so a simple negative-to-positive sign
+            // change finds the crossing.
+            const delta = ((lambdaAt(date) - angle + 540) % 360) - 180;
+            if (
+              prevDelta != null &&
+              prevDelta < 0 &&
+              delta >= 0 &&
+              delta - prevDelta < 180
+            ) {
+              // Refine to the minute within this hour bracket.
+              let lo = h - 1;
+              let hi = h;
+              for (let i = 0; i < 8; i++) {
+                const mid = (lo + hi) / 2;
+                const midDate = new Date(
+                  Date.UTC(year, month1 - 1, day) + mid * 3600000,
+                );
+                if (((lambdaAt(midDate) - angle + 540) % 360) - 180 < 0)
+                  lo = mid;
+                else hi = mid;
+              }
+              return {
+                name,
+                date: new Date(Date.UTC(year, month1 - 1, day) + hi * 3600000),
+              };
+            }
+            prevDelta = delta;
+          }
+        }
+        return null;
+      }
+
+      function seasonEventForLocalDate(year, month1, day, timezone) {
+        // The crossing lives on one UTC date, but its local date differs per
+        // timezone, so search the neighbouring UTC days as well.
+        for (const offset of [-1, 0, 1]) {
+          const probe = new Date(Date.UTC(year, month1 - 1, day + offset));
+          const event = findSeasonEvent(
+            probe.getUTCFullYear(),
+            probe.getUTCMonth() + 1,
+            probe.getUTCDate(),
+          );
+          if (!event) continue;
+          const local = zonedParts(event.date, timezone);
+          if (
+            local.year === year &&
+            local.month === month1 &&
+            local.day === day
+          ) {
+            return { event, local };
+          }
+        }
+        return null;
+      }
+
+      function seasonLabel(event, lat) {
+        const month = event.date.getUTCMonth();
+        const north = lat >= 0;
+        switch (month) {
+          case 5:
+            return north ? "Summer solstice" : "Winter solstice";
+          case 11:
+            return north ? "Winter solstice" : "Summer solstice";
+          case 2:
+            return north ? "Spring equinox" : "Autumn equinox";
+          default:
+            return north ? "Autumn equinox" : "Spring equinox";
+        }
       }
 
       function solarEvents(year, month1, day, lat, lng) {
@@ -1208,9 +1340,23 @@
           </span>`
                     : `<span class="loc-special">${r.kind === "night" ? "polar night" : "midnight sun"}</span>`;
 
+                const found = seasonEventForLocalDate(
+                  year,
+                  month,
+                  day,
+                  loc.timezone,
+                );
+                let seasonBadge = "";
+                if (found) {
+                  const hh = String(found.local.hour).padStart(2, "0");
+                  const mm = String(found.local.minute).padStart(2, "0");
+                  const label = seasonLabel(found.event, loc.lat);
+                  seasonBadge = `<span class="season-badge" data-season-tooltip data-season-label="${esc(label)}" data-season-time="${hh}:${mm}" role="img" aria-label="${esc(label)} at ${hh}:${mm}">${found.event.name === "Solstice" ? "&#9737;" : "&#9671;"}</span>`;
+                }
+
                 return `<div class="loc-row">
         <span class="loc-dot" style="background:${color}"></span>
-        <span class="loc-name">${esc(loc.name)}</span>
+        <span class="loc-name">${esc(loc.name)}${seasonBadge}</span>
         ${content}
       </div>`;
               })
@@ -2043,6 +2189,47 @@
       detailOverlay.addEventListener("click", (e) => {
         if (e.target === detailOverlay) closeDetails();
       });
+
+      // Custom tooltip for season badges on the calendar.
+      const calendarTooltip = document.getElementById("calendarTooltip");
+
+      function hideCalendarTooltip() {
+        calendarTooltip.hidden = true;
+      }
+
+      function showCalendarTooltip(target) {
+        const label = target.dataset.seasonLabel;
+        if (!label) return;
+        calendarTooltip.textContent = `${label} · ${target.dataset.seasonTime}`;
+        calendarTooltip.hidden = false;
+        const rect = target.getBoundingClientRect();
+        const gap = 8;
+        const viewportWidth =
+          document.documentElement.clientWidth || window.innerWidth;
+        let left = rect.left + rect.width / 2 - calendarTooltip.offsetWidth / 2;
+        left = Math.max(
+          gap,
+          Math.min(viewportWidth - calendarTooltip.offsetWidth - gap, left),
+        );
+        let top = rect.top - calendarTooltip.offsetHeight - gap;
+        if (top < gap) top = rect.bottom + gap;
+        calendarTooltip.style.left = `${left}px`;
+        calendarTooltip.style.top = `${top}px`;
+      }
+
+      document.addEventListener("pointerover", (e) => {
+        const badge = closestDataTarget(e.target, "[data-season-tooltip]");
+        if (badge) showCalendarTooltip(badge);
+      });
+      document.addEventListener("pointerout", (e) => {
+        if (
+          closestDataTarget(e.target, "[data-season-tooltip]") &&
+          !closestDataTarget(e.relatedTarget, "[data-season-tooltip]")
+        )
+          hideCalendarTooltip();
+      });
+      window.addEventListener("scroll", hideCalendarTooltip, true);
+      window.addEventListener("resize", hideCalendarTooltip);
 
       document.getElementById("calendar").addEventListener("click", (e) => {
         const info = e.target.closest("[data-detail-key]");
