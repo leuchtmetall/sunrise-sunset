@@ -3,6 +3,7 @@
 
 # A simple sunrise/sunset calendar in a single html file.
 [Open with example data](https://leuchtmetall.github.io/sunrise-sunset/)
+
 This project is a calendar for displaying the sunrise and sunset times for multiple locations. It is deliberately contained in a single html file, so it can be used anywhere where html files with JavaScript are supported.
 
 ## What it shows:
