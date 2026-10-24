@@ -56,35 +56,13 @@
         gap: 0.6rem;
       }
 
-      .nav-btn {
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        color: #fff;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-        user-select: none;
-      }
-      .nav-btn:hover {
-        background: rgba(255, 255, 255, 0.28);
-      }
-
+      .nav-btn,
       .today-btn {
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.28);
         color: #fff;
         height: 30px;
-        padding: 0 0.8rem;
-        border-radius: 15px;
         cursor: pointer;
-        font-size: 0.85rem;
-        font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -93,8 +71,22 @@
           opacity 0.2s;
         user-select: none;
       }
+      .nav-btn:hover,
       .today-btn:hover {
         background: rgba(255, 255, 255, 0.28);
+      }
+
+      .nav-btn {
+        width: 30px;
+        border-radius: 50%;
+        font-size: 1.1rem;
+      }
+
+      .today-btn {
+        padding: 0 0.8rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
       }
       .today-btn.disabled {
         visibility: hidden;
@@ -150,6 +142,9 @@
       .day.other {
         background: #f7f9fc;
       }
+      .day[data-key] {
+        cursor: pointer;
+      }
 
       .day.today .day-num {
         background: #d63031;
@@ -175,7 +170,6 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        margin-bottom: 2px;
       }
       .day.other .day-num {
         color: #b0bcc8;
@@ -423,10 +417,6 @@
         margin-bottom: 2px;
       }
 
-      .day-head .day-num {
-        margin-bottom: 0;
-      }
-
       .info-btn {
         width: 18px;
         height: 18px;
@@ -452,18 +442,6 @@
         color: #243551;
       }
 
-      .season-badge.moon-badge {
-        background: hsl(240, 30%, 92%);
-        color: hsl(240, 25%, 35%);
-      }
-
-      .day-head-end {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        flex-shrink: 0;
-      }
-
       .season-badge {
         display: inline-flex;
         align-items: center;
@@ -477,6 +455,11 @@
         font-size: 0.58rem;
         line-height: 1;
         flex-shrink: 0;
+      }
+
+      .season-badge.moon-badge {
+        background: hsl(240, 30%, 92%);
+        color: hsl(240, 25%, 35%);
       }
 
       .info-btn:focus-visible,
@@ -776,7 +759,8 @@
         flex-shrink: 0;
       }
 
-      .chart-location-key.is-muted {
+      .chart-location-key.is-muted,
+      .chart-location-key.is-line-dimmed {
         opacity: 0.28;
       }
 
@@ -808,12 +792,10 @@
       }
 
       .chart-grid-sixth {
-        opacity: 1;
         stroke: #aab8c7;
       }
 
       .chart-grid-zone {
-        stroke-width: 1;
         opacity: 0.7;
       }
 
@@ -847,20 +829,10 @@
       }
 
       .chart-curve.is-muted,
-      .chart-event-dot.is-muted {
-        opacity: 0.16;
-      }
-
-      .chart-curve.is-line-dimmed {
-        opacity: 0.16;
-      }
-
+      .chart-event-dot.is-muted,
+      .chart-curve.is-line-dimmed,
       .chart-event-dot.is-line-dimmed {
         opacity: 0.16;
-      }
-
-      .chart-location-key.is-line-dimmed {
-        opacity: 0.28;
       }
 
       .chart-curve.is-line-pinned {
@@ -911,18 +883,15 @@
         stroke-width: 0.75;
       }
 
+      /* SVG text inherits the body font family. */
       .chart-event-tooltip text {
         fill: #fff;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 9px;
         font-weight: 600;
       }
 
       .chart-label {
         fill: #718096;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         font-size: 11px;
       }
 
@@ -948,7 +917,6 @@
           font-size: 0.6rem;
           width: 16px;
           height: 16px;
-          margin-bottom: 1px;
         }
         /* hide name — color alone identifies the location */
         .loc-name {
@@ -956,7 +924,6 @@
         }
         /* stack rise and set vertically so each cell only needs one time's width */
         .loc-row {
-          align-items: center;
           gap: 2px;
           font-size: 0.58rem;
         }
@@ -1149,40 +1116,78 @@
 
     <script>
       // ═══════════════════════════════════════════════════════════════
-      // Solar calculations — NOAA algorithm
-      // Reference: https://gml.noaa.gov/grad/solcalc/calcdetails.html
+      // Helpers
       // ═══════════════════════════════════════════════════════════════
 
       const toRad = (deg) => (deg * Math.PI) / 180;
       const toDeg = (rad) => (rad * 180) / Math.PI;
       const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const norm360 = (deg) => ((deg % 360) + 360) % 360;
+      const pad2 = (n) => String(n).padStart(2, "0");
+      const HOUR_MS = 3600000;
+      const DAY_MS = 24 * HOUR_MS;
+
+      function cached(cache, key, create) {
+        let value = cache.get(key);
+        if (value === undefined) {
+          value = create();
+          cache.set(key, value);
+        }
+        return value;
+      }
+
+      function esc(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Solar calculations — NOAA algorithm
+      // Reference: https://gml.noaa.gov/grad/solcalc/calcdetails.html
+      // ═══════════════════════════════════════════════════════════════
+
+      // Julian centuries since J2000.0 for a UTC timestamp in milliseconds.
+      const julianCentury = (ms) =>
+        (ms / DAY_MS + 2440587.5 - 2451545.0) / 36525.0;
+
+      const sunMeanLongitude = (T) =>
+        norm360(280.46646 + T * (36000.76983 + T * 0.0003032));
+
+      // Returned in radians.
+      const sunMeanAnomaly = (T) =>
+        toRad(357.52911 + T * (35999.05029 - 0.0001537 * T));
+
+      const sunEquationOfCenter = (T, Mr, withThirdTerm = true) =>
+        Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
+        Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) +
+        (withThirdTerm ? Math.sin(3 * Mr) * 0.000289 : 0);
+
+      const ascendingNode = (T) => toRad(125.04 - 1934.136 * T);
+
+      const sunApparentLongitude = (T, L0, Mr) =>
+        L0 +
+        sunEquationOfCenter(T, Mr) -
+        0.00569 -
+        0.00478 * Math.sin(ascendingNode(T));
 
       function solarData(year, month1, day, lat, lng) {
-        const JD = Date.UTC(year, month1 - 1, day, 12) / 86400000 + 2440587.5;
-        const T = (JD - 2451545.0) / 36525.0;
+        const base = Date.UTC(year, month1 - 1, day);
+        const T = julianCentury(base + 12 * HOUR_MS);
 
-        const L0 =
-          (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) % 360;
-        const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
-        const Mr = toRad(M);
+        const L0 = sunMeanLongitude(T);
+        const Mr = sunMeanAnomaly(T);
         const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
-
-        const C =
-          Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
-          Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) +
-          Math.sin(3 * Mr) * 0.000289;
-        const sl = L0 + C;
-
-        const om = 125.04 - 1934.136 * T;
-        const omr = toRad(om);
-        const lam = sl - 0.00569 - 0.00478 * Math.sin(omr);
-        const lr = toRad(lam);
+        const lr = toRad(sunApparentLongitude(T, L0, Mr));
 
         const e0 =
           23 +
           (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) /
             60;
-        const eps = toRad(e0 + 0.00256 * Math.cos(omr));
+        const eps = toRad(e0 + 0.00256 * Math.cos(ascendingNode(T)));
 
         const sinD = Math.sin(eps) * Math.sin(lr);
         const cosD = Math.cos(Math.asin(sinD));
@@ -1198,10 +1203,8 @@
             0.5 * y * y * Math.sin(4 * L0r) -
             1.25 * e * e * Math.sin(2 * Mr));
 
-        const latr = toRad(lat);
-        const base = Date.UTC(year, month1 - 1, day);
         const noon = 720 - 4 * lng - eot;
-        return { base, noon, sinD, cosD, latr };
+        return { base, noon, sinD, cosD, latr: toRad(lat) };
       }
 
       function eventsAtAltitude(solar, altitude) {
@@ -1212,7 +1215,7 @@
         if (cosHA > 1) return { kind: "night" };
         if (cosHA < -1) return { kind: "sun" };
 
-        const HA = toDeg(Math.acos(clamp(cosHA, -1, 1)));
+        const HA = toDeg(Math.acos(cosHA));
         return {
           kind: "normal",
           rise: new Date(solar.base + (solar.noon - 4 * HA) * 60000),
@@ -1220,148 +1223,150 @@
         };
       }
 
-      // Solstice/equinox detection: the event happens when the sun's apparent
-      // ecliptic longitude crosses 0/90/180/270 degrees. The crossing is
-      // bracketed by comparing the longitude at successive hours, then refined
-      // to the minute; the result is returned as a UTC Date.
-      function findSeasonEvent(year, month1, day) {
-        const lambdaAt = (date) => {
-          const jd = date.getTime() / 86400000 + 2440587.5;
-          const T = (jd - 2451545.0) / 36525.0;
-          const L0 =
-            (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) %
-            360;
-          const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
-          const Mr = toRad(M);
-          const C =
-            Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
-            Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) +
-            Math.sin(3 * Mr) * 0.000289;
-          const omr = toRad(125.04 - 1934.136 * T);
-          return (
-            (((L0 + C - 0.00569 - 0.00478 * Math.sin(omr)) % 360) + 360) % 360
-          );
+      function sunTimes(year, month1, day, lat, lng) {
+        const solar = solarData(year, month1, day, lat, lng);
+        const horizon = eventsAtAltitude(solar, -0.8333);
+        const civil = eventsAtAltitude(solar, -6);
+        const nautical = eventsAtAltitude(solar, -12);
+        const astronomical = eventsAtAltitude(solar, -18);
+
+        const kind = horizon.kind;
+        const dayLength =
+          kind === "sun"
+            ? DAY_MS
+            : kind === "night"
+              ? 0
+              : horizon.set - horizon.rise;
+
+        return {
+          kind,
+          sunrise: horizon.rise || null,
+          sunset: horizon.set || null,
+          solarNoon: new Date(solar.base + solar.noon * 60000),
+          dayLength,
+          civilDawn: civil.rise || null,
+          civilDusk: civil.set || null,
+          nauticalDawn: nautical.rise || null,
+          nauticalDusk: nautical.set || null,
+          astronomicalDawn: astronomical.rise || null,
+          astronomicalDusk: astronomical.set || null,
+          solar,
         };
-        for (const [angle, name] of [
-          [0, "Equinox"],
-          [90, "Solstice"],
-          [180, "Equinox"],
-          [270, "Solstice"],
-        ]) {
-          let prevDelta = null;
-          for (let h = 0; h <= 24; h++) {
-            const date = new Date(Date.UTC(year, month1 - 1, day, h));
-            // Wrap-aware signed distance to the target angle. For solstices
-            // (90/270) the longitude moves monotonically upward through the
-            // angle; for equinoxes (0/180) it also only increases past the
-            // angle within the day, so a simple negative-to-positive sign
-            // change finds the crossing.
-            const delta = ((lambdaAt(date) - angle + 540) % 360) - 180;
-            if (
-              prevDelta != null &&
-              prevDelta < 0 &&
-              delta >= 0 &&
-              delta - prevDelta < 180
-            ) {
-              // Refine to the minute within this hour bracket.
-              let lo = h - 1;
-              let hi = h;
-              for (let i = 0; i < 8; i++) {
-                const mid = (lo + hi) / 2;
-                const midDate = new Date(
-                  Date.UTC(year, month1 - 1, day) + mid * 3600000,
-                );
-                if (((lambdaAt(midDate) - angle + 540) % 360) - 180 < 0)
-                  lo = mid;
-                else hi = mid;
-              }
-              return {
-                name,
-                date: new Date(Date.UTC(year, month1 - 1, day) + hi * 3600000),
-              };
+      }
+
+      function solarAltitude(solar, date) {
+        const minutes = (date.getTime() - solar.base) / 60000;
+        const hourAngle = toRad((minutes - solar.noon) / 4);
+        const sinAltitude =
+          Math.sin(solar.latr) * solar.sinD +
+          Math.cos(solar.latr) * solar.cosD * Math.cos(hourAngle);
+        return toDeg(Math.asin(clamp(sinAltitude, -1, 1)));
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Seasons and moon phases
+      // ═══════════════════════════════════════════════════════════════
+
+      // Finds the instant during the UTC day starting at `dayStart` when
+      // angleAt(ms) increases through `target` degrees. The wrap-aware signed
+      // distance to the target changes sign from negative to positive at the
+      // crossing; it is bracketed by hour, then refined by bisection.
+      function findAngleCrossing(dayStart, angleAt, target, iterations) {
+        const deltaAt = (hour) =>
+          ((angleAt(dayStart + hour * HOUR_MS) - target + 540) % 360) - 180;
+        let prevDelta = null;
+        for (let h = 0; h <= 24; h++) {
+          const delta = deltaAt(h);
+          if (
+            prevDelta != null &&
+            prevDelta < 0 &&
+            delta >= 0 &&
+            delta - prevDelta < 180
+          ) {
+            let lo = h - 1;
+            let hi = h;
+            for (let i = 0; i < iterations; i++) {
+              const mid = (lo + hi) / 2;
+              if (deltaAt(mid) < 0) lo = mid;
+              else hi = mid;
             }
-            prevDelta = delta;
+            return new Date(dayStart + hi * HOUR_MS);
           }
+          prevDelta = delta;
         }
         return null;
       }
 
-      // Moon phase detection: the phase instant is when the moon's elongation
-      // from the sun reaches a multiple of 90 degrees. Uses the same NOAA-style
-      // low-precision lunar terms as the solar calculations.
-      function findMoonEvent(year, month1, day) {
-        const elongationAt = (date) => {
-          const jd = date.getTime() / 86400000 + 2440587.5;
-          const T = (jd - 2451545.0) / 36525.0;
-          const L0 =
-            (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) %
-            360;
-          const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
-          const Mr = toRad(M);
-          const C =
-            Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) +
-            Math.sin(2 * Mr) * (0.019993 - 0.000101 * T);
-          const sunLon = L0 + C;
-          const Lp =
-            (((218.316 + T * (481267.8813 - T * 0.0048)) % 360) + 360) % 360;
-          const D =
-            (((297.85 + T * (445267.1115 - T * (0.0019 - T / 189474))) % 360) +
-              360) %
-            360;
-          const Dr = toRad(D);
-          const Mp =
-            (((134.963 + T * (477198.8676 + T * 0.008)) % 360) + 360) % 360;
-          const Mpr = toRad(Mp);
-          const F =
-            (((93.272 + T * (483202.0175 - T * 0.0024)) % 360) + 360) % 360;
-          const Fr = toRad(F);
-          const lambda =
-            Lp +
-            6.289 * Math.sin(Mpr) +
-            1.274 * Math.sin(2 * Dr - Mpr) +
-            0.658 * Math.sin(2 * Dr) +
-            0.214 * Math.sin(2 * Mpr) -
-            0.186 * Math.sin(Mr) -
-            0.114 * Math.sin(2 * Fr);
-          return (((lambda - sunLon) % 360) + 360) % 360;
-        };
-        for (const [angle, name, glyph] of [
-          [0, "New moon", "\u25CF"],
-          [90, "First quarter", "◐"],
-          [180, "Full moon", "\u25CB"],
-          [270, "Last quarter", "◑"],
-        ]) {
-          let prevDelta = null;
-          for (let h = 0; h <= 24; h++) {
-            const date = new Date(Date.UTC(year, month1 - 1, day, h));
-            const delta = ((elongationAt(date) - angle + 540) % 360) - 180;
-            if (
-              prevDelta != null &&
-              prevDelta < 0 &&
-              delta >= 0 &&
-              delta - prevDelta < 180
-            ) {
-              let lo = h - 1;
-              let hi = h;
-              for (let i = 0; i < 10; i++) {
-                const mid = (lo + hi) / 2;
-                const midDate = new Date(
-                  Date.UTC(year, month1 - 1, day) + mid * 3600000,
-                );
-                if (((elongationAt(midDate) - angle + 540) % 360) - 180 < 0)
-                  lo = mid;
-                else hi = mid;
-              }
-              return {
-                name,
-                glyph,
-                date: new Date(Date.UTC(year, month1 - 1, day) + hi * 3600000),
-              };
-            }
-            prevDelta = delta;
-          }
+      function findFirstCrossing(dayStart, angleAt, phases, iterations) {
+        for (const phase of phases) {
+          const date = findAngleCrossing(
+            dayStart,
+            angleAt,
+            phase.angle,
+            iterations,
+          );
+          if (date) return { ...phase, date };
         }
         return null;
+      }
+
+      // Solstices and equinoxes: the sun's apparent ecliptic longitude
+      // crosses 0/90/180/270 degrees.
+      const SEASON_PHASES = [
+        { angle: 0, name: "Equinox", glyph: "◇" },
+        { angle: 90, name: "Solstice", glyph: "☉" },
+        { angle: 180, name: "Equinox", glyph: "◇" },
+        { angle: 270, name: "Solstice", glyph: "☉" },
+      ].map((phase) => ({ ...phase, type: "season" }));
+
+      function sunLongitudeAt(ms) {
+        const T = julianCentury(ms);
+        return norm360(
+          sunApparentLongitude(T, sunMeanLongitude(T), sunMeanAnomaly(T)),
+        );
+      }
+
+      // Moon phases: the moon's elongation from the sun reaches a multiple of
+      // 90 degrees. Uses low-precision lunar terms.
+      const MOON_PHASES = [
+        { angle: 0, name: "New moon", glyph: "●" },
+        { angle: 90, name: "First quarter", glyph: "◐" },
+        { angle: 180, name: "Full moon", glyph: "○" },
+        { angle: 270, name: "Last quarter", glyph: "◑" },
+      ].map((phase) => ({ ...phase, type: "moon" }));
+
+      function moonElongationAt(ms) {
+        const T = julianCentury(ms);
+        const Mr = sunMeanAnomaly(T);
+        const sunLon = sunMeanLongitude(T) + sunEquationOfCenter(T, Mr, false);
+        const Lp = norm360(218.316 + T * (481267.8813 - T * 0.0048));
+        const Dr = toRad(
+          norm360(297.85 + T * (445267.1115 - T * (0.0019 - T / 189474))),
+        );
+        const Mpr = toRad(norm360(134.963 + T * (477198.8676 + T * 0.008)));
+        const Fr = toRad(norm360(93.272 + T * (483202.0175 - T * 0.0024)));
+        const lambda =
+          Lp +
+          6.289 * Math.sin(Mpr) +
+          1.274 * Math.sin(2 * Dr - Mpr) +
+          0.658 * Math.sin(2 * Dr) +
+          0.214 * Math.sin(2 * Mpr) -
+          0.186 * Math.sin(Mr) -
+          0.114 * Math.sin(2 * Fr);
+        return norm360(lambda - sunLon);
+      }
+
+      // Events depend only on the UTC day, so they are computed once per day
+      // and shared by all locations.
+      const astroEventCache = new Map();
+
+      function astroEventsOnUtcDay(dayStart) {
+        return cached(astroEventCache, dayStart, () =>
+          [
+            findFirstCrossing(dayStart, sunLongitudeAt, SEASON_PHASES, 8),
+            findFirstCrossing(dayStart, moonElongationAt, MOON_PHASES, 10),
+          ].filter(Boolean),
+        );
       }
 
       function astroEventsForLocalDate(year, month1, day, timezone) {
@@ -1370,21 +1375,8 @@
         // matching events (a day can hold both a season and a moon event).
         const matches = [];
         for (const offset of [-1, 0, 1]) {
-          const probe = new Date(Date.UTC(year, month1 - 1, day + offset));
-          const candidates = [
-            findSeasonEvent(
-              probe.getUTCFullYear(),
-              probe.getUTCMonth() + 1,
-              probe.getUTCDate(),
-            ),
-            findMoonEvent(
-              probe.getUTCFullYear(),
-              probe.getUTCMonth() + 1,
-              probe.getUTCDate(),
-            ),
-          ];
-          for (const event of candidates) {
-            if (!event) continue;
+          const dayStart = Date.UTC(year, month1 - 1, day + offset);
+          for (const event of astroEventsOnUtcDay(dayStart)) {
             const local = zonedParts(event.date, timezone);
             if (
               local.year === year &&
@@ -1399,10 +1391,9 @@
       }
 
       function astroLabel(event, lat) {
-        if (event.glyph) return event.name;
-        const month = event.date.getUTCMonth();
+        if (event.type === "moon") return event.name;
         const north = lat >= 0;
-        switch (month) {
+        switch (event.date.getUTCMonth()) {
           case 5:
             return north ? "Summer solstice" : "Winter solstice";
           case 11:
@@ -1414,341 +1405,48 @@
         }
       }
 
-      function solarEvents(year, month1, day, lat, lng) {
-        const solar = solarData(year, month1, day, lat, lng);
-        const horizon = eventsAtAltitude(solar, -0.8333);
-        const civil = eventsAtAltitude(solar, -6);
-        const nautical = eventsAtAltitude(solar, -12);
-        const astronomical = eventsAtAltitude(solar, -18);
+      // ═══════════════════════════════════════════════════════════════
+      // Timezones and formatting
+      // ═══════════════════════════════════════════════════════════════
 
-        const kind =
-          horizon.kind === "night"
-            ? "night"
-            : horizon.kind === "sun"
-              ? "sun"
-              : "normal";
-        const sunrise = horizon.rise || null;
-        const sunset = horizon.set || null;
-        const dayLength =
-          kind === "sun"
-            ? 24 * 60 * 60 * 1000
-            : kind === "night"
-              ? 0
-              : sunset - sunrise;
-
-        return {
-          kind,
-          sunrise,
-          sunset,
-          solarNoon: new Date(solar.base + solar.noon * 60000),
-          dayLength,
-          civilDawn: civil.rise || null,
-          civilDusk: civil.set || null,
-          nauticalDawn: nautical.rise || null,
-          nauticalDusk: nautical.set || null,
-          astronomicalDawn: astronomical.rise || null,
-          astronomicalDusk: astronomical.set || null,
-          solar,
-        };
-      }
-
-      function sunTimes(year, month1, day, lat, lng) {
-        return solarEvents(year, month1, day, lat, lng);
-      }
-
-      function solarAltitude(solar, date) {
-        const minutes = (date.getTime() - solar.base) / 60000;
-        const hourAngle = toRad((minutes - solar.noon) / 4);
-        const sinAltitude =
-          Math.sin(solar.latr) * solar.sinD +
-          Math.cos(solar.latr) * solar.cosD * Math.cos(hourAngle);
-        return toDeg(Math.asin(clamp(sinAltitude, -1, 1)));
-      }
+      // Creating Intl.DateTimeFormat instances is slow, so keep one per zone.
+      const timeFormatters = new Map();
+      const partsFormatters = new Map();
+      const TIME_OPTIONS = { hour: "2-digit", minute: "2-digit", hour12: false };
 
       function fmtTime(date, tz) {
-        try {
-          return date.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-            timeZone: tz,
-          });
-        } catch {
-          return date.toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
-        }
-      }
-
-      // ═══════════════════════════════════════════════════════════════
-      // Color palette — one per location (cycles if > 10)
-      // ═══════════════════════════════════════════════════════════════
-
-      const PALETTE = [
-        "#c0392b", // red
-        "#2980b9", // blue
-        "#e67e22", // orange
-        "#27ae60", // green
-        "#8e44ad", // purple
-        "#16a085", // teal
-        "#d4a017", // gold
-        "#c0547a", // rose
-        "#2c7a4b", // forest
-        "#1a5276", // navy
-      ];
-
-      function colorFor(i) {
-        return PALETTE[i % PALETTE.length];
-      }
-
-      const EVENT_DEFINITIONS = [
-        {
-          key: "astronomicalDawn",
-          label: "Astronomical dawn",
-          short: "Astro dawn",
-          color: "#334e68",
-        },
-        {
-          key: "nauticalDawn",
-          label: "Nautical dawn",
-          short: "Nautical dawn",
-          color: "#7c8da6",
-        },
-        {
-          key: "civilDawn",
-          label: "Civil dawn",
-          short: "Civil dawn",
-          color: "#f59e0b",
-        },
-        {
-          key: "sunrise",
-          label: "Sunrise",
-          short: "Sunrise",
-          color: "#e67e22",
-        },
-        {
-          key: "solarNoon",
-          label: "Solar noon",
-          short: "Solar noon",
-          color: "#d4a017",
-        },
-        {
-          key: "sunset",
-          label: "Sunset",
-          short: "Sunset",
-          color: "#e67e22",
-        },
-        {
-          key: "civilDusk",
-          label: "Civil dusk",
-          short: "Civil dusk",
-          color: "#f59e0b",
-        },
-        {
-          key: "nauticalDusk",
-          label: "Nautical dusk",
-          short: "Nautical dusk",
-          color: "#7c8da6",
-        },
-        {
-          key: "astronomicalDusk",
-          label: "Astronomical dusk",
-          short: "Astro dusk",
-          color: "#334e68",
-        },
-      ];
-
-      // ═══════════════════════════════════════════════════════════════
-      // State
-      // ═══════════════════════════════════════════════════════════════
-
-      let locations = [];
-      let highlighted = null;
-
-      const now = new Date();
-      const today = {
-        year: now.getFullYear(),
-        month: now.getMonth() + 1,
-        day: now.getDate(),
-      };
-      let viewYear = today.year;
-      let viewMonth = today.month;
-
-      const MONTHS = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-      const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-      // ═══════════════════════════════════════════════════════════════
-      // Render
-      // ═══════════════════════════════════════════════════════════════
-
-      function render() {
-        document.getElementById("monthLabel").textContent =
-          `${MONTHS[viewMonth - 1]} ${viewYear}`;
-        document
-          .getElementById("todayBtn")
-          .classList.toggle(
-            "disabled",
-            viewYear === today.year && viewMonth === today.month,
-          );
-
-        const firstDow =
-          (new Date(viewYear, viewMonth - 1, 1).getDay() + 6) % 7;
-        const daysInMon = new Date(viewYear, viewMonth, 0).getDate();
-
-        // Adjacent months, derived by letting Date normalize the overflow/underflow.
-        const prevMonthEnd = new Date(viewYear, viewMonth - 1, 0);
-        const prevDays = prevMonthEnd.getDate();
-        const py = prevMonthEnd.getFullYear();
-        const pm = prevMonthEnd.getMonth() + 1;
-
-        const nextMonthStart = new Date(viewYear, viewMonth, 1);
-        const ny = nextMonthStart.getFullYear();
-        const nm = nextMonthStart.getMonth() + 1;
-
-        let html = DAYS.map((d) => `<div class="col-header">${d}</div>`).join(
-          "",
-        );
-
-        // Previous-month padding
-        for (let i = 0; i < firstDow; i++)
-          html += dayCell(py, pm, prevDays - firstDow + i + 1, true);
-
-        // Current month
-        for (let d = 1; d <= daysInMon; d++) {
-          const isToday =
-            today.year === viewYear &&
-            today.month === viewMonth &&
-            today.day === d;
-          html += dayCell(viewYear, viewMonth, d, false, isToday);
-        }
-
-        // Next-month padding
-        const tail = (7 - ((firstDow + daysInMon) % 7)) % 7;
-        for (let d = 1; d <= tail; d++) html += dayCell(ny, nm, d, true);
-
-        document.getElementById("calendar").innerHTML = html;
-        renderLegend();
-      }
-
-      function dayCell(year, month, day, other, isToday = false) {
-        const key = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        const cls =
-          "day" +
-          (other ? " other" : "") +
-          (isToday ? " today" : "") +
-          (highlighted === key ? " highlighted" : "");
-
-        // Only show data for the current month's days
-        const rows = other
-          ? ""
-          : locations
-              .map((loc, i) => {
-                const color = colorFor(i);
-                const data = sunTimes(year, month, day, loc.lat, loc.lng);
-
-                const content =
-                  data.kind === "normal"
-                    ? `<span class="loc-times">
-            <span class="loc-rise" style="color:${color}">&#8593;${fmtTime(data.sunrise, loc.timezone)}</span>
-            <span class="loc-set" style="color:${color}">&#8595;${fmtTime(data.sunset, loc.timezone)}</span>
-          </span>`
-                    : `<span class="loc-special">${data.kind === "night" ? "polar night" : "midnight sun"}</span>`;
-
-                const events = astroEventsForLocalDate(
-                  year,
-                  month,
-                  day,
-                  loc.timezone,
-                );
-                const seasonBadges = events
-                  .map((found) => {
-                    const hh = String(found.local.hour).padStart(2, "0");
-                    const mm = String(found.local.minute).padStart(2, "0");
-                    const label = astroLabel(found.event, loc.lat);
-                    return `<span class="season-badge${found.event.glyph ? " moon-badge" : ""}" data-season-tooltip data-season-label="${esc(label)}" data-season-time="${hh}:${mm}" role="img" aria-label="${esc(label)} at ${hh}:${mm}">${found.event.glyph || (found.event.name === "Solstice" ? "&#9737;" : "&#9671;")}</span>`;
-                  })
-                  .join("");
-
-                return `<div class="loc-row">
-        <span class="loc-dot" style="background:${color}"></span>
-        <span class="loc-name">${esc(loc.name)}${seasonBadges}</span>
-        ${content}
-      </div>`;
-              })
-              .join("");
-
-        const clickable = other
-          ? ""
-          : ` data-key="${key}" style="cursor:pointer"`;
-        const infoLabel = `View sun details for ${MONTHS[month - 1]} ${day}, ${year}`;
-        const infoButton = other
-          ? ""
-          : `<button class="info-btn" type="button" data-detail-key="${key}" aria-label="${infoLabel}" title="${infoLabel}">i</button>`;
-        return `<div class="${cls}"${clickable}><div class="day-head"><div class="day-num">${day}</div>${infoButton}</div>${rows}</div>`;
-      }
-
-      function renderLegend() {
-        const el = document.getElementById("legend");
-        const editButton = `<button class="legend-edit" id="legendEdit" type="button" title="Edit the locations stored in the URL">Edit locations</button>`;
-        if (!locations.length) {
-          el.innerHTML = `<span class="legend-empty">No valid locations in the URL.</span>${editButton}`;
-          return;
-        }
-        el.innerHTML =
-          locations
-            .map((loc, i) => {
-              const color = colorFor(i);
-              return `<div class="legend-item">
-      <span class="legend-dot" style="background:${color}"></span>
-      <span>${esc(loc.name)}</span>
-      <span class="legend-times">
-        <span class="legend-rise">&#8593; rise</span>
-        &nbsp;
-        <span class="legend-set">&#8595; set</span>
-      </span>
-    </div>`;
-            })
-            .join("") + editButton;
-      }
-
-      function esc(s) {
-        return s
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+        const formatter = cached(timeFormatters, tz, () => {
+          try {
+            return new Intl.DateTimeFormat("en-US", {
+              ...TIME_OPTIONS,
+              timeZone: tz,
+            });
+          } catch {
+            return new Intl.DateTimeFormat("en-US", TIME_OPTIONS);
+          }
+        });
+        return formatter.format(date);
       }
 
       function zonedParts(date, tz) {
-        const parts = new Intl.DateTimeFormat("en-US", {
-          timeZone: tz,
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hourCycle: "h23",
-        }).formatToParts(date);
+        const formatter = cached(
+          partsFormatters,
+          tz,
+          () =>
+            new Intl.DateTimeFormat("en-US", {
+              timeZone: tz,
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hourCycle: "h23",
+            }),
+        );
         const values = {};
-        for (const part of parts) {
-          if (part.type !== "literal") values[part.type] = Number(part.value);
+        for (const { type, value } of formatter.formatToParts(date)) {
+          if (type !== "literal") values[type] = Number(value);
         }
         return values;
       }
@@ -1799,9 +1497,32 @@
       function fmtDuration(milliseconds) {
         if (milliseconds == null) return "--";
         const totalMinutes = Math.max(0, Math.round(milliseconds / 60000));
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = String(totalMinutes % 60).padStart(2, "0");
-        return `${hours}h ${minutes}m`;
+        return `${Math.floor(totalMinutes / 60)}h ${pad2(totalMinutes % 60)}m`;
+      }
+
+      function fmtHour(hour) {
+        const total = Math.round(clamp(hour, 0, 24) * 60);
+        return `${pad2(Math.floor(total / 60))}:${pad2(total % 60)}`;
+      }
+
+      const MONTHS = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      function dateKey(year, month1, day) {
+        return `${year}-${pad2(month1)}-${pad2(day)}`;
       }
 
       function parseDateKey(key) {
@@ -1813,9 +1534,200 @@
         return `${MONTHS[month1 - 1]} ${day}, ${year}`;
       }
 
-      function detailEventId(locationIndex, eventKey) {
-        return `location-${locationIndex}-${eventKey}`;
+      // ═══════════════════════════════════════════════════════════════
+      // Color palette — one per location (cycles if > 10)
+      // ═══════════════════════════════════════════════════════════════
+
+      const PALETTE = [
+        "#c0392b", // red
+        "#2980b9", // blue
+        "#e67e22", // orange
+        "#27ae60", // green
+        "#8e44ad", // purple
+        "#16a085", // teal
+        "#d4a017", // gold
+        "#c0547a", // rose
+        "#2c7a4b", // forest
+        "#1a5276", // navy
+      ];
+
+      function colorFor(i) {
+        return PALETTE[i % PALETTE.length];
       }
+
+      const KIND_NOTES = { night: "Polar night", sun: "Midnight sun" };
+
+      // ═══════════════════════════════════════════════════════════════
+      // State and DOM references
+      // ═══════════════════════════════════════════════════════════════
+
+      let locations = [];
+      let highlighted = null;
+
+      const now = new Date();
+      const today = {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+      };
+      let viewYear = today.year;
+      let viewMonth = today.month;
+
+      const calendarEl = document.getElementById("calendar");
+      const legendEl = document.getElementById("legend");
+      const calendarTooltip = document.getElementById("calendarTooltip");
+
+      const detailOverlay = document.getElementById("detailOverlay");
+      const detailDialog = detailOverlay.querySelector(".detail-dialog");
+      const detailClose = document.getElementById("detailClose");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailContent = document.getElementById("detailContent");
+      const chartTooltip = document.getElementById("chartTooltip");
+
+      const locationOverlay = document.getElementById("locationOverlay");
+      const locationForm = document.getElementById("locationForm");
+      const locationRows = document.getElementById("locationRows");
+      const locationError = document.getElementById("locationError");
+      const locationNote = document.getElementById("locationNote");
+      const locationAdd = document.getElementById("locationAdd");
+
+      // ═══════════════════════════════════════════════════════════════
+      // Calendar
+      // ═══════════════════════════════════════════════════════════════
+
+      function render() {
+        document.getElementById("monthLabel").textContent =
+          `${MONTHS[viewMonth - 1]} ${viewYear}`;
+        document
+          .getElementById("todayBtn")
+          .classList.toggle(
+            "disabled",
+            viewYear === today.year && viewMonth === today.month,
+          );
+
+        const firstDow =
+          (new Date(viewYear, viewMonth - 1, 1).getDay() + 6) % 7;
+        const daysInMon = new Date(viewYear, viewMonth, 0).getDate();
+
+        // Adjacent months, derived by letting Date normalize the overflow/underflow.
+        const prevMonthEnd = new Date(viewYear, viewMonth - 1, 0);
+        const prevDays = prevMonthEnd.getDate();
+        const py = prevMonthEnd.getFullYear();
+        const pm = prevMonthEnd.getMonth() + 1;
+
+        const nextMonthStart = new Date(viewYear, viewMonth, 1);
+        const ny = nextMonthStart.getFullYear();
+        const nm = nextMonthStart.getMonth() + 1;
+
+        let html = DAYS.map((d) => `<div class="col-header">${d}</div>`).join(
+          "",
+        );
+
+        // Previous-month padding
+        for (let i = 0; i < firstDow; i++)
+          html += dayCell(py, pm, prevDays - firstDow + i + 1, true);
+
+        // Current month
+        for (let d = 1; d <= daysInMon; d++) {
+          const isToday =
+            today.year === viewYear &&
+            today.month === viewMonth &&
+            today.day === d;
+          html += dayCell(viewYear, viewMonth, d, false, isToday);
+        }
+
+        // Next-month padding
+        const tail = (7 - ((firstDow + daysInMon) % 7)) % 7;
+        for (let d = 1; d <= tail; d++) html += dayCell(ny, nm, d, true);
+
+        calendarEl.innerHTML = html;
+        renderLegend();
+      }
+
+      function dayCell(year, month, day, other, isToday = false) {
+        const key = dateKey(year, month, day);
+        const cls =
+          "day" +
+          (other ? " other" : "") +
+          (isToday ? " today" : "") +
+          (highlighted === key ? " highlighted" : "");
+        const dayNum = `<div class="day-num">${day}</div>`;
+
+        // Only show data for the current month's days
+        if (other)
+          return `<div class="${cls}"><div class="day-head">${dayNum}</div></div>`;
+
+        const infoLabel = `View sun details for ${dateLabel(year, month, day)}`;
+        const infoButton = `<button class="info-btn" type="button" data-detail-key="${key}" aria-label="${infoLabel}" title="${infoLabel}">i</button>`;
+        const rows = locations
+          .map((loc, i) => locationDayRow(loc, colorFor(i), year, month, day))
+          .join("");
+        return `<div class="${cls}" data-key="${key}"><div class="day-head">${dayNum}${infoButton}</div>${rows}</div>`;
+      }
+
+      function locationDayRow(loc, color, year, month, day) {
+        const data = sunTimes(year, month, day, loc.lat, loc.lng);
+        const content =
+          data.kind === "normal"
+            ? `<span class="loc-times">
+            <span class="loc-rise" style="color:${color}">&#8593;${fmtTime(data.sunrise, loc.timezone)}</span>
+            <span class="loc-set" style="color:${color}">&#8595;${fmtTime(data.sunset, loc.timezone)}</span>
+          </span>`
+            : `<span class="loc-special">${KIND_NOTES[data.kind].toLowerCase()}</span>`;
+
+        const badges = astroEventsForLocalDate(year, month, day, loc.timezone)
+          .map(({ event, local }) => {
+            const time = `${pad2(local.hour)}:${pad2(local.minute)}`;
+            const label = esc(astroLabel(event, loc.lat));
+            const moonClass = event.type === "moon" ? " moon-badge" : "";
+            return `<span class="season-badge${moonClass}" data-season-tooltip data-season-label="${label}" data-season-time="${time}" role="img" aria-label="${label} at ${time}">${event.glyph}</span>`;
+          })
+          .join("");
+
+        return `<div class="loc-row">
+        <span class="loc-dot" style="background:${color}"></span>
+        <span class="loc-name">${esc(loc.name)}${badges}</span>
+        ${content}
+      </div>`;
+      }
+
+      function renderLegend() {
+        const editButton = `<button class="legend-edit" id="legendEdit" type="button" title="Edit the locations stored in the URL">Edit locations</button>`;
+        if (!locations.length) {
+          legendEl.innerHTML = `<span class="legend-empty">No valid locations in the URL.</span>${editButton}`;
+          return;
+        }
+        legendEl.innerHTML =
+          locations
+            .map(
+              (loc, i) => `<div class="legend-item">
+      <span class="legend-dot" style="background:${colorFor(i)}"></span>
+      <span>${esc(loc.name)}</span>
+      <span class="legend-times">
+        <span class="legend-rise">&#8593; rise</span>
+        &nbsp;
+        <span class="legend-set">&#8595; set</span>
+      </span>
+    </div>`,
+            )
+            .join("") + editButton;
+      }
+
+      // ═══════════════════════════════════════════════════════════════
+      // Day details: sun position chart
+      // ═══════════════════════════════════════════════════════════════
+
+      const EVENT_DEFINITIONS = [
+        { key: "astronomicalDawn", label: "Astronomical dawn", short: "Astro dawn", color: "#334e68" },
+        { key: "nauticalDawn", label: "Nautical dawn", short: "Nautical dawn", color: "#7c8da6" },
+        { key: "civilDawn", label: "Civil dawn", short: "Civil dawn", color: "#f59e0b" },
+        { key: "sunrise", label: "Sunrise", short: "Sunrise", color: "#e67e22" },
+        { key: "solarNoon", label: "Solar noon", short: "Solar noon", color: "#d4a017" },
+        { key: "sunset", label: "Sunset", short: "Sunset", color: "#e67e22" },
+        { key: "civilDusk", label: "Civil dusk", short: "Civil dusk", color: "#f59e0b" },
+        { key: "nauticalDusk", label: "Nautical dusk", short: "Nautical dusk", color: "#7c8da6" },
+        { key: "astronomicalDusk", label: "Astronomical dusk", short: "Astro dusk", color: "#334e68" },
+      ];
 
       // Chart geometry — shared so pointer positions can be mapped back to hours.
       const CHART = {
@@ -1827,28 +1739,43 @@
         bottom: 216,
         horizonY: 132,
         verticalScale: 0.92,
+        axisLabelY: 239,
+        axisLabelLineHeight: 12,
+        curveSamples: 96,
       };
       CHART.plotWidth = CHART.width - CHART.left - CHART.right;
 
-      const xForHour = (hour) =>
-        CHART.left + (clamp(hour, 0, 24) / 24) * CHART.plotWidth;
+      const AXIS_HOURS = [0, 6, 12, 18, 24];
+
+      // Event tooltips sit in fixed lanes: dawn events stack down from the
+      // top of the plot, dusk events stack up from the bottom.
+      const TOOLTIP_HEIGHT = 17;
+      const TOOLTIP_LANE_Y = {
+        astronomicalDawn: CHART.top + 2,
+        nauticalDawn: CHART.top + 22,
+        civilDawn: CHART.top + 42,
+        sunrise: CHART.top + 62,
+        solarNoon: CHART.top + 82,
+        sunset: CHART.bottom - TOOLTIP_HEIGHT - 2,
+        civilDusk: CHART.bottom - TOOLTIP_HEIGHT - 22,
+        nauticalDusk: CHART.bottom - TOOLTIP_HEIGHT - 42,
+        astronomicalDusk: CHART.bottom - TOOLTIP_HEIGHT - 62,
+      };
+
+      const rawXForDisplayHour = (displayHour) =>
+        CHART.left + (displayHour / 24) * CHART.plotWidth;
+      const xForHour = (hour) => rawXForDisplayHour(clamp(hour, 0, 24));
       const hourForX = (x) =>
         clamp(((x - CHART.left) / CHART.plotWidth) * 24, 0, 24);
       const yForAltitude = (altitude) =>
         CHART.horizonY - clamp(altitude, -90, 90) * CHART.verticalScale;
 
-      function fmtHour(hour) {
-        const total = Math.round(clamp(hour, 0, 24) * 60);
-        const hours = String(Math.floor(total / 60)).padStart(2, "0");
-        const minutes = String(total % 60).padStart(2, "0");
-        return `${hours}:${minutes}`;
-      }
+      const gridLine = (cls, x, style = "") =>
+        `<line class="${cls}"${style} x1="${x}" y1="${CHART.top}" x2="${x}" y2="${CHART.bottom}"></line>`;
 
       function solarNoonShiftHours(entry, year, month1, day) {
-        const noon = entry.data.solarNoon;
-        if (!noon) return 0;
         const noonHour = localHourOnDate(
-          noon,
+          entry.data.solarNoon,
           year,
           month1,
           day,
@@ -1857,27 +1784,17 @@
         return noonHour == null ? 0 : 12 - noonHour;
       }
 
-      const rawXForDisplayHour = (displayHour) =>
-        CHART.left + (displayHour / 24) * CHART.plotWidth;
+      // Display x for a location's local hour, shifted when aligning to solar noon.
+      function seriesX(series, hour) {
+        return alignToSolarNoon
+          ? rawXForDisplayHour(hour + series.shift)
+          : xForHour(hour);
+      }
 
-      function renderCombinedSunChart(year, month1, day, entries) {
-        const { width, height, left, top, bottom, horizonY, plotWidth } = CHART;
-        const shifts = new Map(
-          entries.map((entry) => [
-            entry.index,
-            alignToSolarNoon
-              ? solarNoonShiftHours(entry, year, month1, day)
-              : 0,
-          ]),
-        );
-        const xForShiftedHour = (index, hour) =>
-          alignToSolarNoon
-            ? rawXForDisplayHour(hour + shifts.get(index))
-            : xForHour(hour);
-
-        const locationLegend = entries
+      function chartLocationLegend(series) {
+        return series
           .map(
-            ({ loc, index }) => `<button
+            ({ loc, index, color }) => `<button
               class="chart-location-key"
               type="button"
               data-location-toggle="${index}"
@@ -1885,146 +1802,136 @@
               aria-pressed="false"
               aria-label="Highlight ${esc(loc.name)} on the chart"
             >
-              <span class="chart-location-dot" style="background:${colorFor(index)}"></span>
+              <span class="chart-location-dot" style="background:${color}"></span>
               ${esc(loc.name)}
             </button>`,
           )
           .join("");
+      }
 
-        const curves = entries
-          .map(({ loc, index, data }) => {
+      function chartCurves(series, year, month1, day) {
+        return series
+          .map((s) => {
             const points = [];
-            for (let i = 0; i <= 96; i++) {
-              const hour = (24 * i) / 96;
-              const sample = zonedDate(year, month1, day, hour, loc.timezone);
+            for (let i = 0; i <= CHART.curveSamples; i++) {
+              const hour = (24 * i) / CHART.curveSamples;
+              const sample = zonedDate(year, month1, day, hour, s.loc.timezone);
+              const altitude = solarAltitude(s.data.solar, sample);
               points.push(
-                `${xForShiftedHour(index, hour).toFixed(1)},${yForAltitude(solarAltitude(data.solar, sample)).toFixed(1)}`,
+                `${seriesX(s, hour).toFixed(1)},${yForAltitude(altitude).toFixed(1)}`,
               );
             }
             const path = `M ${points.join(" L ")}`;
-            const hourShift = shifts.get(index);
-            return `<path class="chart-curve" data-graph-line data-location-index="${index}" data-hour-shift="${hourShift}" style="stroke:${colorFor(index)}" d="${path}" aria-label="${esc(loc.name)}"></path>
-              <path class="chart-curve-hit" data-graph-line data-location-index="${index}" data-hour-shift="${hourShift}" d="${path}"></path>`;
+            const attrs = `data-graph-line data-location-index="${s.index}" data-hour-shift="${s.shift}"`;
+            return `<path class="chart-curve" ${attrs} style="stroke:${s.color}" d="${path}" aria-label="${esc(s.loc.name)}"></path>
+              <path class="chart-curve-hit" ${attrs} d="${path}"></path>`;
           })
           .join("");
+      }
 
-        let verticalGrid = "";
-        let timeLabels = "";
-        let axisHeight = CHART.height;
+      // Returns vertical grid lines, hour labels, and the SVG height they need.
+      function chartTimeAxis(series) {
+        if (!alignToSolarNoon) {
+          let grid = "";
+          for (let hour = 0; hour <= 24; hour++) {
+            const cls = `chart-grid${hour % 6 === 0 ? " chart-grid-sixth" : ""}`;
+            grid += gridLine(cls, xForHour(hour).toFixed(1));
+          }
+          const labels = AXIS_HOURS.map(
+            (hour) =>
+              `<text class="chart-label" x="${xForHour(hour).toFixed(1)}" y="${CHART.axisLabelY}" text-anchor="middle">${fmtHour(hour)}</text>`,
+          ).join("");
+          return { grid, labels, height: CHART.height };
+        }
+
         // One grid/label set per distinct timezone: each zone's whole local
         // hours land at their solar-noon-relative position on the axis.
-        const zones = [];
-        const seen = new Set();
-        for (const entry of entries) {
-          if (seen.has(entry.loc.timezone)) continue;
-          seen.add(entry.loc.timezone);
-          zones.push({
-            timezone: entry.loc.timezone,
-            shift: shifts.get(entry.index),
-            color: colorFor(entry.index),
-          });
+        const zones = new Map();
+        for (const s of series) {
+          if (!zones.has(s.loc.timezone)) zones.set(s.loc.timezone, s);
         }
-        if (alignToSolarNoon) {
-          axisHeight = 239 + zones.length * 12 + 2;
-          verticalGrid = zones
-            .map(({ shift, color }) =>
-              [0, 6, 12, 18, 24]
-                .map((hour) => {
-                  const displayHour = hour + shift;
-                  if (displayHour < 0 || displayHour > 24) return "";
-                  const x = rawXForDisplayHour(displayHour).toFixed(1);
-                  return `<line class="chart-grid chart-grid-zone" style="stroke:${color};stroke-width:1;opacity:0.7" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
-                })
-                .join(""),
-            )
-            .join("");
-          verticalGrid += `<line class="chart-grid chart-grid-sixth" x1="${xForHour(12)}" y1="${top}" x2="${xForHour(12)}" y2="${bottom}"></line>`;
-          timeLabels = zones
-            .map(({ timezone, shift, color }, zoneIndex) => {
-              const zoneName = timezone.split("/").pop().replace(/_/g, " ");
-              const labelY = 239 + zoneIndex * 12;
-              return [0, 6, 12, 18, 24]
-                .map((hour) => {
-                  const displayHour = hour + shift;
-                  if (displayHour < 0 || displayHour > 24) return "";
-                  const x = rawXForDisplayHour(displayHour).toFixed(1);
-                  const suffix = hour === 12 ? ` ${zoneName}` : "";
-                  return `<text class="chart-label chart-label-zone" style="fill:${color}" x="${x}" y="${labelY}" text-anchor="middle">${fmtHour(hour)}${suffix}</text>`;
-                })
-                .join("");
-            })
-            .join("");
-        } else {
-          verticalGrid = Array.from({ length: 25 }, (_, hour) => hour)
-            .map((hour) => {
-              const x = xForHour(hour).toFixed(1);
-              return `<line class="chart-grid${hour % 6 === 0 ? " chart-grid-sixth" : ""}" x1="${x}" y1="${top}" x2="${x}" y2="${bottom}"></line>`;
-            })
-            .join("");
-          timeLabels = [0, 6, 12, 18, 24]
-            .map((hour) => {
-              const x = xForHour(hour).toFixed(1);
-              return `<text class="chart-label" x="${x}" y="239" text-anchor="middle">${String(hour).padStart(2, "0")}:00</text>`;
-            })
-            .join("");
-        }
-        const horizontalGrid = [45, -45]
-          .map((altitude) => {
-            const y = yForAltitude(altitude).toFixed(1);
-            return `<line class="chart-grid" x1="${left}" y1="${y}" x2="${left + plotWidth}" y2="${y}"></line>`;
-          })
-          .join("");
+        let grid = "";
+        let labels = "";
+        [...zones.values()].forEach((s, zoneIndex) => {
+          const zoneName = s.loc.timezone.split("/").pop().replace(/_/g, " ");
+          const labelY = CHART.axisLabelY + zoneIndex * CHART.axisLabelLineHeight;
+          for (const hour of AXIS_HOURS) {
+            const displayHour = hour + s.shift;
+            if (displayHour < 0 || displayHour > 24) continue;
+            const x = rawXForDisplayHour(displayHour).toFixed(1);
+            const suffix = hour === 12 ? ` ${zoneName}` : "";
+            grid += gridLine("chart-grid chart-grid-zone", x, ` style="stroke:${s.color}"`);
+            labels += `<text class="chart-label chart-label-zone" style="fill:${s.color}" x="${x}" y="${labelY}" text-anchor="middle">${fmtHour(hour)}${suffix}</text>`;
+          }
+        });
+        grid += gridLine("chart-grid chart-grid-sixth", xForHour(12));
+        const height =
+          CHART.axisLabelY + zones.size * CHART.axisLabelLineHeight + 2;
+        return { grid, labels, height };
+      }
 
-        const tooltipHeight = 17;
-        const tooltipLaneY = {
-          astronomicalDawn: top + 2,
-          nauticalDawn: top + 22,
-          civilDawn: top + 42,
-          sunrise: top + 62,
-          solarNoon: top + 82,
-          sunset: bottom - tooltipHeight - 2,
-          civilDusk: bottom - tooltipHeight - 22,
-          nauticalDusk: bottom - tooltipHeight - 42,
-          astronomicalDusk: bottom - tooltipHeight - 62,
-        };
-
-        const markers = entries
-          .map(({ loc, index, data }) =>
+      function chartMarkers(series, year, month1, day) {
+        const { left, plotWidth } = CHART;
+        return series
+          .map((s) =>
             EVENT_DEFINITIONS.map((event) => {
-              const date = data[event.key];
+              const date = s.data[event.key];
               if (!date) return "";
               const hour = localHourOnDate(
                 date,
                 year,
                 month1,
                 day,
-                loc.timezone,
+                s.loc.timezone,
               );
               if (hour == null) return "";
-              const x = xForShiftedHour(index, hour);
-              const y = yForAltitude(solarAltitude(data.solar, date));
-              const eventId = detailEventId(index, event.key);
-              const time = fmtDetailTime(date, loc.timezone);
+              const x = seriesX(s, hour);
+              const y = yForAltitude(solarAltitude(s.data.solar, date));
+              const time = fmtDetailTime(date, s.loc.timezone);
+              const label = `${esc(s.loc.name)} ${event.label}: ${time}`;
               const radius = event.key === "solarNoon" ? 4 : 3.25;
               const tooltipWidth = Math.max(
                 40,
                 (event.short.length + time.length + 1) * 4.8 + 10,
               );
-              const tooltipX = Math.max(
+              const tooltipX = clamp(
+                x - tooltipWidth / 2,
                 left,
-                Math.min(left + plotWidth - tooltipWidth, x - tooltipWidth / 2),
+                left + plotWidth - tooltipWidth,
               );
-              const tooltipY = tooltipLaneY[event.key];
+              const tooltipY = TOOLTIP_LANE_Y[event.key];
               const tooltipCenterX = tooltipX + tooltipWidth / 2;
-              return `<circle class="chart-event-dot" data-event-id="${eventId}" data-location-index="${index}" data-tooltip="${esc(loc.name)} ${event.label}: ${time}" aria-label="${esc(loc.name)} ${event.label}: ${time}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" style="fill:${colorFor(index)};stroke:${event.color}"></circle>
-                <g class="chart-event-tooltip" data-location-index="${index}" aria-label="${event.label}: ${time}">
-                  <line class="chart-event-tooltip-link" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${tooltipCenterX.toFixed(1)}" y2="${(y < tooltipY ? tooltipY + tooltipHeight : tooltipY).toFixed(1)}"></line>
-                  <rect x="${tooltipX.toFixed(1)}" y="${tooltipY.toFixed(1)}" width="${tooltipWidth.toFixed(1)}" height="${tooltipHeight}" rx="4"></rect>
+              const linkEndY = y < tooltipY ? tooltipY + TOOLTIP_HEIGHT : tooltipY;
+              return `<circle class="chart-event-dot" data-event-id="location-${s.index}-${event.key}" data-location-index="${s.index}" data-tooltip="${label}" aria-label="${label}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" style="fill:${s.color};stroke:${event.color}"></circle>
+                <g class="chart-event-tooltip" data-location-index="${s.index}" aria-label="${event.label}: ${time}">
+                  <line class="chart-event-tooltip-link" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${tooltipCenterX.toFixed(1)}" y2="${linkEndY.toFixed(1)}"></line>
+                  <rect x="${tooltipX.toFixed(1)}" y="${tooltipY.toFixed(1)}" width="${tooltipWidth.toFixed(1)}" height="${TOOLTIP_HEIGHT}" rx="4"></rect>
                   <text x="${tooltipCenterX.toFixed(1)}" y="${(tooltipY + 11.5).toFixed(1)}" text-anchor="middle">${event.short} ${time}</text>
                 </g>`;
             }).join(""),
           )
           .join("");
+      }
+
+      function renderCombinedSunChart(year, month1, day, entries) {
+        const { width, left, top, horizonY, bottom, plotWidth } = CHART;
+        const series = entries.map((entry) => ({
+          ...entry,
+          color: colorFor(entry.index),
+          shift: alignToSolarNoon
+            ? solarNoonShiftHours(entry, year, month1, day)
+            : 0,
+        }));
+        const axis = chartTimeAxis(series);
+        const horizontalGrid = [45, -45]
+          .map((altitude) => {
+            const y = yForAltitude(altitude).toFixed(1);
+            return `<line class="chart-grid" x1="${left}" y1="${y}" x2="${left + plotWidth}" y2="${y}"></line>`;
+          })
+          .join("");
+        const note = alignToSolarNoon
+          ? "Curves centered on each location’s solar noon; grid lines show every timezone’s local hours."
+          : "Each curve uses its location’s local time. Click a location to keep its event times visible.";
 
         return `<div class="detail-chart-card">
           <div class="detail-chart-heading">
@@ -2039,15 +1946,15 @@
               >
                 Align to solar noon
               </button>
-              <span class="detail-chart-note">${alignToSolarNoon ? "Curves centered on each location\u2019s solar noon; grid lines show every timezone\u2019s local hours." : "Each curve uses its location\u2019s local time. Click a location to keep its event times visible."}</span>
+              <span class="detail-chart-note">${note}</span>
             </span>
           </div>
-          <div class="chart-location-legend">${locationLegend}</div>
-          <svg class="sun-chart" viewBox="0 0 ${width} ${axisHeight}" role="img" aria-label="Sun position chart for all locations">
+          <div class="chart-location-legend">${chartLocationLegend(series)}</div>
+          <svg class="sun-chart" viewBox="0 0 ${width} ${axis.height}" role="img" aria-label="Sun position chart for all locations">
             <title>Sun position over the local day for all locations</title>
             <rect class="chart-sky" x="${left}" y="${top}" width="${plotWidth}" height="${horizonY - top}"></rect>
             <rect class="chart-night" x="${left}" y="${horizonY}" width="${plotWidth}" height="${bottom - horizonY}"></rect>
-            ${verticalGrid}
+            ${axis.grid}
             ${horizontalGrid}
             <line class="chart-horizon" x1="${left}" y1="${horizonY}" x2="${left + plotWidth}" y2="${horizonY}"></line>
             <text class="chart-label" x="${left + 6}" y="${top + 14}">above horizon</text>
@@ -2055,32 +1962,25 @@
             <text class="chart-label" x="${left - 8}" y="${yForAltitude(45) + 4}" text-anchor="end">+45</text>
             <text class="chart-label" x="${left - 8}" y="${horizonY + 4}" text-anchor="end">0</text>
             <text class="chart-label" x="${left - 8}" y="${yForAltitude(-45) + 4}" text-anchor="end">-45</text>
-            ${curves}
-            ${markers}
-            ${timeLabels}
+            ${chartCurves(series, year, month1, day)}
+            ${chartMarkers(series, year, month1, day)}
+            ${axis.labels}
           </svg>
         </div>`;
       }
 
-      function renderDetails(year, month1, day, entriesArg) {
-        const entries =
-          entriesArg ||
-          locations.map((loc, index) => ({
-            loc,
-            index,
-            data: sunTimes(year, month1, day, loc.lat, loc.lng),
-          }));
+      // ═══════════════════════════════════════════════════════════════
+      // Day details: overlay
+      // ═══════════════════════════════════════════════════════════════
 
+      const detailMetric = (label, value) =>
+        `<span class="detail-metric"><span class="detail-metric-label">${label}</span><span class="detail-metric-value">${value}</span></span>`;
+
+      function renderDetails({ year, month, day, entries }) {
         const rows = entries
           .map(({ loc, index, data }) => {
-            const color = colorFor(index);
-            const note =
-              data.kind === "night"
-                ? "Polar night"
-                : data.kind === "sun"
-                  ? "Midnight sun"
-                  : "";
-
+            const note = KIND_NOTES[data.kind];
+            const tz = loc.timezone;
             return `<button
               class="detail-location"
               type="button"
@@ -2090,49 +1990,80 @@
               aria-label="Highlight ${esc(loc.name)} on the chart"
             >
               <span class="detail-location-heading">
-                <span class="detail-location-dot" style="background:${color}"></span>
+                <span class="detail-location-dot" style="background:${colorFor(index)}"></span>
                 <span class="detail-location-labels">
                   <span class="detail-location-name">${esc(loc.name)}</span>
-                  <span class="detail-location-zone">${esc(loc.timezone)}${note ? ` &middot; <span class="detail-location-note">${note}</span>` : ""}</span>
+                  <span class="detail-location-zone">${esc(tz)}${note ? ` &middot; <span class="detail-location-note">${note}</span>` : ""}</span>
                 </span>
               </span>
-              <span class="detail-metric"><span class="detail-metric-label">Sunrise</span><span class="detail-metric-value">${fmtDetailTime(data.sunrise, loc.timezone)}</span></span>
-              <span class="detail-metric"><span class="detail-metric-label">Solar noon</span><span class="detail-metric-value">${fmtDetailTime(data.solarNoon, loc.timezone)}</span></span>
-              <span class="detail-metric"><span class="detail-metric-label">Sunset</span><span class="detail-metric-value">${fmtDetailTime(data.sunset, loc.timezone)}</span></span>
-              <span class="detail-metric"><span class="detail-metric-label">Day length</span><span class="detail-metric-value">${fmtDuration(data.dayLength)}</span></span>
+              ${detailMetric("Sunrise", fmtDetailTime(data.sunrise, tz))}
+              ${detailMetric("Solar noon", fmtDetailTime(data.solarNoon, tz))}
+              ${detailMetric("Sunset", fmtDetailTime(data.sunset, tz))}
+              ${detailMetric("Day length", fmtDuration(data.dayLength))}
             </button>`;
           })
           .join("");
 
-        return `${renderCombinedSunChart(year, month1, day, entries)}<div class="detail-locations">${rows}</div>`;
+        return `${renderCombinedSunChart(year, month, day, entries)}<div class="detail-locations">${rows}</div>`;
       }
 
+      let detail = null; // { year, month, day, entries } of the last opened day
       let detailReturnFocus = null;
       let hoveredLocationIndex = null;
-      let hoveredGraphLine = null;
-      let pinnedGraphLine = null;
+      let pinnedLocationIndex = null;
       let alignToSolarNoon = false;
-      let detailYear = null;
-      let detailMonth = null;
-      let detailDay = null;
-      let detailEntries = null;
       let chartTooltipSource = null;
-      const detailOverlay = document.getElementById("detailOverlay");
-      const detailDialog = detailOverlay.querySelector(".detail-dialog");
-      const detailClose = document.getElementById("detailClose");
-      const detailTitle = document.getElementById("detailTitle");
-      const detailContent = document.getElementById("detailContent");
-      const chartTooltip = document.getElementById("chartTooltip");
 
-      function closestDataTarget(target, selector) {
-        return target && typeof target.closest === "function"
-          ? target.closest(selector)
-          : null;
+      function showOverlay(overlay) {
+        overlay.hidden = false;
+        document.body.classList.add("modal-open");
       }
 
-      function placeChartTooltip(text, centerX, topEdge, bottomEdge) {
-        chartTooltip.textContent = text;
-        chartTooltip.hidden = false;
+      function hideOverlay(overlay, returnFocus, fallbackFocus) {
+        overlay.hidden = true;
+        document.body.classList.remove("modal-open");
+        if (returnFocus && document.body.contains(returnFocus))
+          returnFocus.focus();
+        else fallbackFocus?.focus();
+      }
+
+      function openDetails(key, opener) {
+        const { year, month, day } = parseDateKey(key);
+        const entries = locations.map((loc, index) => ({
+          loc,
+          index,
+          data: sunTimes(year, month, day, loc.lat, loc.lng),
+        }));
+        detail = { year, month, day, entries };
+        detailTitle.textContent = dateLabel(year, month, day);
+        hoveredLocationIndex = null;
+        pinnedLocationIndex = null;
+        detailContent.innerHTML = renderDetails(detail);
+        detailDialog.scrollTop = 0;
+        hideChartTooltip();
+        detailReturnFocus = opener;
+        showOverlay(detailOverlay);
+        detailClose.focus();
+      }
+
+      function closeDetails() {
+        if (detailOverlay.hidden) return;
+        hideChartTooltip();
+        clearPinnedLocation();
+        const returnFocus = detailReturnFocus;
+        detailReturnFocus = null;
+        hideOverlay(detailOverlay, returnFocus);
+      }
+
+      function closestDataTarget(target, selector) {
+        return target?.closest?.(selector) ?? null;
+      }
+
+      // Positions a fixed tooltip above the given edges, or below when there
+      // is no room, keeping it inside the viewport.
+      function placeTooltip(tooltip, text, centerX, topEdge, bottomEdge) {
+        tooltip.textContent = text;
+        tooltip.hidden = false;
 
         const viewportWidth =
           document.documentElement.clientWidth || window.innerWidth;
@@ -2142,29 +2073,33 @@
         const left = Math.max(
           gap,
           Math.min(
-            viewportWidth - chartTooltip.offsetWidth - gap,
-            centerX - chartTooltip.offsetWidth / 2,
+            viewportWidth - tooltip.offsetWidth - gap,
+            centerX - tooltip.offsetWidth / 2,
           ),
         );
-        let top = topEdge - chartTooltip.offsetHeight - gap;
+        let top = topEdge - tooltip.offsetHeight - gap;
         if (top < gap) top = bottomEdge + gap;
-        top = Math.min(top, viewportHeight - chartTooltip.offsetHeight - gap);
-        chartTooltip.style.left = `${left}px`;
-        chartTooltip.style.top = `${Math.max(gap, top)}px`;
+        top = Math.min(top, viewportHeight - tooltip.offsetHeight - gap);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${Math.max(gap, top)}px`;
       }
 
-      function showChartTooltip(target) {
-        const text = target.dataset.tooltip;
-        if (!text) return;
-
-        chartTooltipSource = "event";
+      function placeTooltipAt(tooltip, text, target) {
         const rect = target.getBoundingClientRect();
-        placeChartTooltip(
+        placeTooltip(
+          tooltip,
           text,
           rect.left + rect.width / 2,
           rect.top,
           rect.bottom,
         );
+      }
+
+      function showEventTooltip(target) {
+        const text = target.dataset.tooltip;
+        if (!text) return;
+        chartTooltipSource = "event";
+        placeTooltipAt(chartTooltip, text, target);
       }
 
       // Hover-only readout: the local time at the pointer's position on a curve.
@@ -2181,7 +2116,8 @@
         );
         const localHour = displayHour - Number(target.dataset.hourShift || 0);
         chartTooltipSource = "line";
-        placeChartTooltip(
+        placeTooltip(
+          chartTooltip,
           `${loc.name} ${fmtHour(localHour)}`,
           clientX,
           clientY - 6,
@@ -2194,301 +2130,138 @@
         chartTooltipSource = null;
       }
 
-      function openDetails(key, opener) {
-        const { year, month, day } = parseDateKey(key);
-        detailYear = year;
-        detailMonth = month;
-        detailDay = day;
-        detailTitle.textContent = dateLabel(year, month, day);
-        clearGraphLineState();
-        const entries = locations.map((loc, index) => ({
-          loc,
-          index,
-          data: sunTimes(year, month, day, loc.lat, loc.lng),
-        }));
-        detailEntries = entries;
-        detailContent.innerHTML = renderDetails(year, month, day, entries);
-        updateLocationToggleState();
-        detailDialog.scrollTop = 0;
-        hideChartTooltip();
-        detailReturnFocus = opener;
-        detailOverlay.hidden = false;
-        document.body.classList.add("modal-open");
-        detailClose.focus();
-      }
-
-      function closeDetails() {
-        if (detailOverlay.hidden) return;
-        hideChartTooltip();
-        clearGraphLineState();
-        detailOverlay.hidden = true;
-        document.body.classList.remove("modal-open");
-        const returnFocus = detailReturnFocus;
-        detailReturnFocus = null;
-        if (returnFocus && document.body.contains(returnFocus))
-          returnFocus.focus();
-      }
-
       function setDetailEventActive(eventId, active) {
         for (const element of detailContent.querySelectorAll(
-          "[data-event-id]",
+          `[data-event-id="${eventId}"]`,
         )) {
-          if (element.dataset.eventId === eventId) {
-            element.classList.toggle("is-active", active);
+          element.classList.toggle("is-active", active);
+        }
+      }
+
+      // Hovering a location focuses it and mutes the others; pinning one also
+      // dims the others and keeps its event tooltips visible.
+      function applyLocationState() {
+        const hovered = hoveredLocationIndex;
+        const pinned = pinnedLocationIndex;
+        for (const element of detailContent.querySelectorAll(
+          "[data-location-index]",
+        )) {
+          const index = element.dataset.locationIndex;
+          const isPinned = index === pinned;
+          const isActive = hovered != null || isPinned;
+          const isSameLocation = index === hovered || isPinned;
+          element.classList.toggle("is-muted", isActive && !isSameLocation);
+          element.classList.toggle("is-focused", isActive && isSameLocation);
+          element.classList.toggle("is-line-dimmed", pinned != null && !isPinned);
+          element.classList.toggle("is-line-pinned", isPinned);
+          if (element.dataset.locationToggle != null) {
+            element.classList.toggle("is-selected", isPinned);
+            element.setAttribute("aria-pressed", String(isPinned));
           }
         }
       }
 
-      function applyChartLocationState() {
-        for (const element of detailContent.querySelectorAll(
-          "[data-location-index]",
-        )) {
-          const locationIndex = element.dataset.locationIndex;
-          const isHovered =
-            hoveredLocationIndex != null &&
-            locationIndex === String(hoveredLocationIndex);
-          const isPinned =
-            pinnedGraphLine != null &&
-            locationIndex === String(pinnedGraphLine);
-          const isActive = hoveredLocationIndex != null || isPinned;
-          const isSameLocation = isHovered || isPinned;
-          element.classList.toggle("is-muted", isActive && !isSameLocation);
-          element.classList.toggle("is-focused", isActive && isSameLocation);
-        }
+      function setHoveredLocation(locationIndex) {
+        hoveredLocationIndex = locationIndex;
+        applyLocationState();
       }
 
-      function applyGraphLineState() {
-        for (const element of detailContent.querySelectorAll(
-          "[data-graph-line]",
-        )) {
-          const isHovered =
-            hoveredGraphLine != null &&
-            element.dataset.locationIndex === String(hoveredGraphLine);
-          const isPinned =
-            pinnedGraphLine != null &&
-            element.dataset.locationIndex === String(pinnedGraphLine);
-          element.classList.toggle("is-line-hovered", isHovered);
-          element.classList.toggle("is-line-pinned", isPinned);
-          element.classList.toggle(
-            "is-line-dimmed",
-            pinnedGraphLine != null && !isPinned,
-          );
-        }
-
-        for (const element of detailContent.querySelectorAll(
-          "[data-location-index]",
-        )) {
-          const isPinned =
-            pinnedGraphLine != null &&
-            element.dataset.locationIndex === String(pinnedGraphLine);
-          element.classList.toggle(
-            "is-line-dimmed",
-            pinnedGraphLine != null && !isPinned,
-          );
-          element.classList.toggle("is-line-pinned", isPinned);
-        }
-      }
-
-      function updateLocationToggleState() {
-        for (const toggle of detailContent.querySelectorAll(
-          "[data-location-toggle]",
-        )) {
-          const isSelected =
-            pinnedGraphLine != null &&
-            toggle.dataset.locationToggle === String(pinnedGraphLine);
-          toggle.classList.toggle("is-selected", isSelected);
-          toggle.setAttribute("aria-pressed", String(isSelected));
-        }
-      }
-
-      function setChartLocationActive(locationIndex, active) {
-        hoveredLocationIndex = active ? String(locationIndex) : null;
-        applyChartLocationState();
-      }
-
-      function pinGraphLine(locationIndex) {
-        pinnedGraphLine = String(locationIndex);
+      function pinLocation(locationIndex) {
+        pinnedLocationIndex = locationIndex;
         hoveredLocationIndex = null;
-        hoveredGraphLine = null;
-        applyChartLocationState();
-        applyGraphLineState();
-        updateLocationToggleState();
+        applyLocationState();
       }
 
-      function toggleGraphLine(locationIndex) {
-        if (pinnedGraphLine === String(locationIndex)) {
-          clearGraphLineState();
-        } else {
-          pinGraphLine(locationIndex);
+      function clearPinnedLocation() {
+        pinLocation(null);
+      }
+
+      // The element matching `selector` that the pointer or focus left,
+      // unless it moved within the same item (same `key` data attribute).
+      function leftItem(target, relatedTarget, selector, key) {
+        const left = closestDataTarget(target, selector);
+        if (!left) return null;
+        const entered = closestDataTarget(relatedTarget, selector);
+        return entered && entered.dataset[key] === left.dataset[key]
+          ? null
+          : left;
+      }
+
+      function enterDetailItem(target) {
+        const eventTarget = closestDataTarget(target, "[data-event-id]");
+        if (eventTarget) {
+          setDetailEventActive(eventTarget.dataset.eventId, true);
+          showEventTooltip(eventTarget);
         }
+        const locationTarget = closestDataTarget(
+          target,
+          "[data-location-index]",
+        );
+        if (locationTarget)
+          setHoveredLocation(locationTarget.dataset.locationIndex);
       }
 
-      function clearGraphLineState() {
-        hoveredLocationIndex = null;
-        hoveredGraphLine = null;
-        pinnedGraphLine = null;
-        applyChartLocationState();
-        applyGraphLineState();
-        updateLocationToggleState();
+      function leaveDetailItem(target, relatedTarget) {
+        const eventTarget = leftItem(
+          target,
+          relatedTarget,
+          "[data-event-id]",
+          "eventId",
+        );
+        if (eventTarget) {
+          setDetailEventActive(eventTarget.dataset.eventId, false);
+          hideChartTooltip();
+        }
+        if (
+          leftItem(
+            target,
+            relatedTarget,
+            "[data-location-index]",
+            "locationIndex",
+          )
+        )
+          setHoveredLocation(null);
       }
 
       detailContent.addEventListener("pointerover", (e) => {
-        const graphLineTarget = closestDataTarget(
-          e.target,
-          "[data-graph-line]",
-        );
-        if (graphLineTarget) {
-          hoveredGraphLine = graphLineTarget.dataset.locationIndex;
-          applyGraphLineState();
-          showGraphLineTooltip(graphLineTarget, e.clientX, e.clientY);
-        }
-
-        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
-        if (eventTarget) {
-          setDetailEventActive(eventTarget.dataset.eventId, true);
-          showChartTooltip(eventTarget);
-        }
-        const locationTarget = closestDataTarget(
-          e.target,
-          "[data-location-index]",
-        );
-        if (locationTarget) {
-          setChartLocationActive(locationTarget.dataset.locationIndex, true);
-        }
+        const graphLine = closestDataTarget(e.target, "[data-graph-line]");
+        if (graphLine) showGraphLineTooltip(graphLine, e.clientX, e.clientY);
+        enterDetailItem(e.target);
       });
 
       detailContent.addEventListener("pointermove", (e) => {
         if (closestDataTarget(e.target, "[data-event-id]")) return;
-        const graphLineTarget = closestDataTarget(
-          e.target,
-          "[data-graph-line]",
-        );
-        if (graphLineTarget) {
-          showGraphLineTooltip(graphLineTarget, e.clientX, e.clientY);
+        const graphLine = closestDataTarget(e.target, "[data-graph-line]");
+        if (graphLine) {
+          showGraphLineTooltip(graphLine, e.clientX, e.clientY);
         } else if (chartTooltipSource === "line") {
           hideChartTooltip();
         }
       });
 
       detailContent.addEventListener("pointerout", (e) => {
-        const graphLineTarget = closestDataTarget(
-          e.target,
-          "[data-graph-line]",
-        );
-        const nextGraphLineTarget = closestDataTarget(
-          e.relatedTarget,
-          "[data-graph-line]",
-        );
         if (
-          graphLineTarget &&
-          (!nextGraphLineTarget ||
-            nextGraphLineTarget.dataset.locationIndex !==
-              graphLineTarget.dataset.locationIndex)
-        ) {
-          hoveredGraphLine = null;
-          applyGraphLineState();
-        }
-        if (graphLineTarget && !nextGraphLineTarget) {
-          if (chartTooltipSource === "line") hideChartTooltip();
-        }
-
-        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
-        const nextEventTarget = closestDataTarget(
-          e.relatedTarget,
-          "[data-event-id]",
-        );
-        if (
-          eventTarget &&
-          (!nextEventTarget ||
-            nextEventTarget.dataset.eventId !== eventTarget.dataset.eventId)
-        ) {
-          setDetailEventActive(eventTarget.dataset.eventId, false);
+          chartTooltipSource === "line" &&
+          closestDataTarget(e.target, "[data-graph-line]") &&
+          !closestDataTarget(e.relatedTarget, "[data-graph-line]")
+        )
           hideChartTooltip();
-        }
-
-        const locationTarget = closestDataTarget(
-          e.target,
-          "[data-location-index]",
-        );
-        const nextLocationTarget = closestDataTarget(
-          e.relatedTarget,
-          "[data-location-index]",
-        );
-        if (
-          locationTarget &&
-          (!nextLocationTarget ||
-            nextLocationTarget.dataset.locationIndex !==
-              locationTarget.dataset.locationIndex)
-        ) {
-          setChartLocationActive(locationTarget.dataset.locationIndex, false);
-        }
+        leaveDetailItem(e.target, e.relatedTarget);
       });
 
-      detailContent.addEventListener("focusin", (e) => {
-        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
-        if (eventTarget) {
-          setDetailEventActive(eventTarget.dataset.eventId, true);
-          showChartTooltip(eventTarget);
-        }
-        const locationTarget = closestDataTarget(
-          e.target,
-          "[data-location-index]",
-        );
-        if (locationTarget) {
-          setChartLocationActive(locationTarget.dataset.locationIndex, true);
-        }
-      });
-
-      detailContent.addEventListener("focusout", (e) => {
-        const eventTarget = closestDataTarget(e.target, "[data-event-id]");
-        const nextEventTarget = closestDataTarget(
-          e.relatedTarget,
-          "[data-event-id]",
-        );
-        if (
-          eventTarget &&
-          (!nextEventTarget ||
-            nextEventTarget.dataset.eventId !== eventTarget.dataset.eventId)
-        ) {
-          setDetailEventActive(eventTarget.dataset.eventId, false);
-          hideChartTooltip();
-        }
-
-        const locationTarget = closestDataTarget(
-          e.target,
-          "[data-location-index]",
-        );
-        const nextLocationTarget = closestDataTarget(
-          e.relatedTarget,
-          "[data-location-index]",
-        );
-        if (
-          locationTarget &&
-          (!nextLocationTarget ||
-            nextLocationTarget.dataset.locationIndex !==
-              locationTarget.dataset.locationIndex)
-        ) {
-          setChartLocationActive(locationTarget.dataset.locationIndex, false);
-        }
-      });
+      detailContent.addEventListener("focusin", (e) =>
+        enterDetailItem(e.target),
+      );
+      detailContent.addEventListener("focusout", (e) =>
+        leaveDetailItem(e.target, e.relatedTarget),
+      );
 
       detailContent.addEventListener("click", (e) => {
-        const chartAlignToggle = closestDataTarget(
-          e.target,
-          "[data-chart-align]",
-        );
-        if (chartAlignToggle) {
+        if (closestDataTarget(e.target, "[data-chart-align]")) {
           alignToSolarNoon = !alignToSolarNoon;
-          if (detailYear == null) return;
-
-          detailContent.innerHTML = renderDetails(
-            detailYear,
-            detailMonth,
-            detailDay,
-            detailEntries,
-          );
-          updateLocationToggleState();
-          applyGraphLineState();
+          if (!detail) return;
+          detailContent.innerHTML = renderDetails(detail);
+          applyLocationState();
           hideChartTooltip();
           detailContent.querySelector("[data-chart-align]").focus();
           return;
@@ -2499,66 +2272,44 @@
           "[data-location-toggle]",
         );
         if (locationToggle) {
-          toggleGraphLine(locationToggle.dataset.locationToggle);
+          const index = locationToggle.dataset.locationToggle;
+          pinLocation(pinnedLocationIndex === index ? null : index);
           return;
         }
 
-        const graphLineTarget = closestDataTarget(
-          e.target,
-          "[data-graph-line]",
-        );
-        if (graphLineTarget) {
-          pinGraphLine(graphLineTarget.dataset.locationIndex);
+        const graphLine = closestDataTarget(e.target, "[data-graph-line]");
+        if (graphLine) {
+          pinLocation(graphLine.dataset.locationIndex);
           return;
         }
 
         if (closestDataTarget(e.target, "[data-event-id]")) return;
-        if (closestDataTarget(e.target, ".sun-chart")) {
-          clearGraphLineState();
-        }
+        if (closestDataTarget(e.target, ".sun-chart")) clearPinnedLocation();
       });
 
       detailDialog.addEventListener("scroll", hideChartTooltip);
-
-      // ═══════════════════════════════════════════════════════════════
-      // Event handlers
-      // ═══════════════════════════════════════════════════════════════
-
       detailClose.addEventListener("click", closeDetails);
       detailOverlay.addEventListener("click", (e) => {
         if (e.target === detailOverlay) closeDetails();
       });
 
-      // Custom tooltip for season badges on the calendar.
-      const calendarTooltip = document.getElementById("calendarTooltip");
+      // ═══════════════════════════════════════════════════════════════
+      // Calendar event handlers
+      // ═══════════════════════════════════════════════════════════════
 
+      // Custom tooltip for season badges on the calendar.
       function hideCalendarTooltip() {
         calendarTooltip.hidden = true;
       }
 
-      function showCalendarTooltip(target) {
-        const label = target.dataset.seasonLabel;
-        if (!label) return;
-        calendarTooltip.textContent = `${label} · ${target.dataset.seasonTime}`;
-        calendarTooltip.hidden = false;
-        const rect = target.getBoundingClientRect();
-        const gap = 8;
-        const viewportWidth =
-          document.documentElement.clientWidth || window.innerWidth;
-        let left = rect.left + rect.width / 2 - calendarTooltip.offsetWidth / 2;
-        left = Math.max(
-          gap,
-          Math.min(viewportWidth - calendarTooltip.offsetWidth - gap, left),
-        );
-        let top = rect.top - calendarTooltip.offsetHeight - gap;
-        if (top < gap) top = rect.bottom + gap;
-        calendarTooltip.style.left = `${left}px`;
-        calendarTooltip.style.top = `${top}px`;
-      }
-
       document.addEventListener("pointerover", (e) => {
         const badge = closestDataTarget(e.target, "[data-season-tooltip]");
-        if (badge) showCalendarTooltip(badge);
+        if (badge)
+          placeTooltipAt(
+            calendarTooltip,
+            `${badge.dataset.seasonLabel} · ${badge.dataset.seasonTime}`,
+            badge,
+          );
       });
       document.addEventListener("pointerout", (e) => {
         if (
@@ -2570,7 +2321,7 @@
       window.addEventListener("scroll", hideCalendarTooltip, true);
       window.addEventListener("resize", hideCalendarTooltip);
 
-      document.getElementById("calendar").addEventListener("click", (e) => {
+      calendarEl.addEventListener("click", (e) => {
         const info = e.target.closest("[data-detail-key]");
         if (info) {
           e.preventDefault();
@@ -2581,7 +2332,10 @@
         if (!cell) return;
         const key = cell.dataset.key;
         highlighted = highlighted === key ? null : key;
-        render();
+        calendarEl
+          .querySelector(".highlighted")
+          ?.classList.remove("highlighted");
+        if (highlighted) cell.classList.add("highlighted");
       });
 
       document.addEventListener("keydown", (e) => {
@@ -2607,6 +2361,7 @@
         }
       });
 
+      // Called from inline onclick attributes, so these must stay global.
       function changeMonth(delta) {
         closeDetails();
         const d = new Date(viewYear, viewMonth - 1 + delta, 1);
@@ -2636,16 +2391,32 @@
         }
       }
 
-      // Returns an error message, or null when the location is usable.
-      function locationErrorMessage(loc) {
-        if (!loc.name) return "Name is required.";
-        if (!Number.isFinite(loc.lat) || loc.lat < -90 || loc.lat > 90)
-          return "Latitude must be a number between -90 and 90.";
-        if (!Number.isFinite(loc.lng) || loc.lng < -180 || loc.lng > 180)
-          return "Longitude must be a number between -180 and 180.";
-        if (!isValidTimeZone(loc.timezone))
-          return "Timezone must be an IANA name such as Europe/Berlin.";
-        return null;
+      const LOCATION_RULES = [
+        {
+          field: "name",
+          isValid: (loc) => !!loc.name,
+          message: "Name is required.",
+        },
+        {
+          field: "lat",
+          isValid: (loc) => Number.isFinite(loc.lat) && Math.abs(loc.lat) <= 90,
+          message: "Latitude must be a number between -90 and 90.",
+        },
+        {
+          field: "lng",
+          isValid: (loc) =>
+            Number.isFinite(loc.lng) && Math.abs(loc.lng) <= 180,
+          message: "Longitude must be a number between -180 and 180.",
+        },
+        {
+          field: "timezone",
+          isValid: (loc) => isValidTimeZone(loc.timezone),
+          message: "Timezone must be an IANA name such as Europe/Berlin.",
+        },
+      ];
+
+      function isValidLocation(loc) {
+        return LOCATION_RULES.every((rule) => rule.isValid(loc));
       }
 
       function parseNumber(value) {
@@ -2661,7 +2432,7 @@
         const lng = parseNumber(parts.pop());
         const lat = parseNumber(parts.pop());
         const loc = { name: parts.join(",").trim(), lat, lng, timezone };
-        return locationErrorMessage(loc) ? null : loc;
+        return isValidLocation(loc) ? loc : null;
       }
 
       // null when the URL has no `loc` parameters; invalid entries are skipped.
@@ -2726,12 +2497,6 @@
       // Location editor
       // ═══════════════════════════════════════════════════════════════
 
-      const locationOverlay = document.getElementById("locationOverlay");
-      const locationForm = document.getElementById("locationForm");
-      const locationRows = document.getElementById("locationRows");
-      const locationError = document.getElementById("locationError");
-      const locationNote = document.getElementById("locationNote");
-      const locationClose = document.getElementById("locationClose");
       let locationReturnFocus = null;
 
       if (typeof Intl.supportedValuesOf === "function") {
@@ -2772,52 +2537,49 @@
       function openLocationEditor(opener) {
         closeDetails();
         hideCalendarTooltip();
-        const fromQuery = locationsFromQuery() !== null;
-        locationNote.innerHTML = fromQuery
-          ? "Locations are currently read from the URL. Applying updates the URL, so you can bookmark or share it."
-          : "Showing the built-in presets. Applying stores the locations in the URL as <code>?loc=Name,lat,lng,Timezone</code>, so you can bookmark or share it.";
+        locationNote.innerHTML =
+          locationsFromQuery() !== null
+            ? "Locations are currently read from the URL. Applying updates the URL, so you can bookmark or share it."
+            : "Showing the built-in presets. Applying stores the locations in the URL as <code>?loc=Name,lat,lng,Timezone</code>, so you can bookmark or share it.";
         fillLocationEditor(locations);
         locationReturnFocus = opener;
-        locationOverlay.hidden = false;
-        document.body.classList.add("modal-open");
-        const first = locationRows.querySelector("input");
-        (first || document.getElementById("locationAdd")).focus();
+        showOverlay(locationOverlay);
+        (locationRows.querySelector("input") || locationAdd).focus();
       }
 
       function closeLocationEditor() {
         if (locationOverlay.hidden) return;
-        locationOverlay.hidden = true;
-        document.body.classList.remove("modal-open");
         const returnFocus = locationReturnFocus;
         locationReturnFocus = null;
-        if (returnFocus && document.body.contains(returnFocus))
-          returnFocus.focus();
-        else document.getElementById("legendEdit")?.focus();
+        hideOverlay(
+          locationOverlay,
+          returnFocus,
+          document.getElementById("legendEdit"),
+        );
       }
 
+      // Marks invalid fields and focuses the first one with an error.
       function readLocationEditor() {
         let firstError = null;
         const list = [...locationRows.querySelectorAll(".location-row")].map(
           (row, i) => {
-            const input = (name) => row.querySelector(`[data-field="${name}"]`);
+            const input = (field) =>
+              row.querySelector(`[data-field="${field}"]`);
             const loc = {
               name: input("name").value.trim(),
               lat: parseNumber(input("lat").value),
               lng: parseNumber(input("lng").value),
               timezone: input("timezone").value.trim(),
             };
-            const invalid = {
-              name: !loc.name,
-              lat: !Number.isFinite(loc.lat) || Math.abs(loc.lat) > 90,
-              lng: !Number.isFinite(loc.lng) || Math.abs(loc.lng) > 180,
-              timezone: !isValidTimeZone(loc.timezone),
-            };
-            for (const name in invalid)
-              input(name).setAttribute("aria-invalid", String(invalid[name]));
-            const error = locationErrorMessage(loc);
-            if (error && !firstError) {
-              firstError = `Location ${i + 1}: ${error}`;
-              row.querySelector('[aria-invalid="true"]').focus();
+            let failed = null;
+            for (const rule of LOCATION_RULES) {
+              const valid = rule.isValid(loc);
+              input(rule.field).setAttribute("aria-invalid", String(!valid));
+              if (!valid && !failed) failed = rule;
+            }
+            if (failed && !firstError) {
+              firstError = `Location ${i + 1}: ${failed.message}`;
+              input(failed.field).focus();
             }
             return loc;
           },
@@ -2843,16 +2605,14 @@
         const next = row.nextElementSibling || row.previousElementSibling;
         row.remove();
         updateLocationRowColors();
-        (
-          next?.querySelector("input") || document.getElementById("locationAdd")
-        ).focus();
+        (next?.querySelector("input") || locationAdd).focus();
       });
 
       locationRows.addEventListener("input", (e) => {
         e.target.removeAttribute("aria-invalid");
       });
 
-      document.getElementById("locationAdd").addEventListener("click", () => {
+      locationAdd.addEventListener("click", () => {
         locationRows.insertAdjacentHTML(
           "beforeend",
           locationRowHtml({ name: "", lat: "", lng: "", timezone: "" }),
@@ -2868,12 +2628,14 @@
       document
         .getElementById("locationCancel")
         .addEventListener("click", closeLocationEditor);
-      locationClose.addEventListener("click", closeLocationEditor);
+      document
+        .getElementById("locationClose")
+        .addEventListener("click", closeLocationEditor);
       locationOverlay.addEventListener("click", (e) => {
         if (e.target === locationOverlay) closeLocationEditor();
       });
 
-      document.getElementById("legend").addEventListener("click", (e) => {
+      legendEl.addEventListener("click", (e) => {
         const button = e.target.closest("#legendEdit");
         if (button) openLocationEditor(button);
       });
@@ -2884,48 +2646,13 @@
 
       // Presets are used only when the URL has no `loc` parameters.
       const PRESET_LOCATIONS = [
-        {
-          name: "New York",
-          lat: 40.71,
-          lng: -74,
-          timezone: "America/New_York",
-        },
-        {
-          name: "Los Angeles",
-          lat: 34.0522,
-          lng: -118.2437,
-          timezone: "America/Los_Angeles",
-        },
-        {
-          name: "London",
-          lat: 51.5074,
-          lng: -0.1278,
-          timezone: "Europe/London",
-        },
-        {
-          name: "Paris",
-          lat: 48.8566,
-          lng: 2.3522,
-          timezone: "Europe/Paris",
-        },
-        {
-          name: "Tokyo",
-          lat: 35.6762,
-          lng: 139.6503,
-          timezone: "Asia/Tokyo",
-        },
-        {
-          name: "Sydney",
-          lat: -33.8688,
-          lng: 151.2093,
-          timezone: "Australia/Sydney",
-        },
-        {
-          name: "Reykjavik",
-          lat: 64.1355,
-          lng: -21.8954,
-          timezone: "Atlantic/Reykjavik",
-        },
+        { name: "New York", lat: 40.71, lng: -74, timezone: "America/New_York" },
+        { name: "Los Angeles", lat: 34.0522, lng: -118.2437, timezone: "America/Los_Angeles" },
+        { name: "London", lat: 51.5074, lng: -0.1278, timezone: "Europe/London" },
+        { name: "Paris", lat: 48.8566, lng: 2.3522, timezone: "Europe/Paris" },
+        { name: "Tokyo", lat: 35.6762, lng: 139.6503, timezone: "Asia/Tokyo" },
+        { name: "Sydney", lat: -33.8688, lng: 151.2093, timezone: "Australia/Sydney" },
+        { name: "Reykjavik", lat: 64.1355, lng: -21.8954, timezone: "Atlantic/Reykjavik" },
         { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
       ];
 
