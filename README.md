@@ -17,4 +17,4 @@ This project is a calendar for displaying the sunrise and sunset times for multi
   - optional aligning by solar noon, to compare day length between locations.
 
 ## Configuration:
-The displayed locations can be configured by editing the `locations` variable at the end of the file.
+The displayed locations can be configured by editing the `locations` variable at the end of the file. Alternatively the locations can be set via url parameters (This can also be done using the included location editor).
