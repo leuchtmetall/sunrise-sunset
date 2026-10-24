@@ -257,6 +257,163 @@
         margin-right: 0.15rem;
       }
 
+      .legend-edit {
+        padding: 0.2rem 0.65rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 999px;
+        background: #fff;
+        color: #2e4a7a;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .legend-edit:hover {
+        background: #e2e8f0;
+      }
+
+      .legend-empty {
+        color: #b91c1c;
+      }
+
+      /* ── Location editor ─────────────────────────────────────── */
+      .location-dialog {
+        width: min(100%, 760px);
+      }
+
+      .location-editor {
+        display: grid;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem 1.25rem;
+        font-size: 0.85rem;
+      }
+
+      .location-editor-note {
+        color: #4a5568;
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+
+      .location-editor-note code {
+        font-size: 0.74rem;
+        word-break: break-all;
+      }
+
+      .location-rows {
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .location-row,
+      .location-row-header {
+        display: grid;
+        grid-template-columns:
+          14px minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr)
+          minmax(0, 2fr) 30px;
+        gap: 0.4rem;
+        align-items: center;
+      }
+
+      .location-row-header {
+        color: #718096;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .location-row-header span:first-child {
+        grid-column: 2;
+      }
+
+      .location-row input {
+        width: 100%;
+        padding: 0.35rem 0.45rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      .location-row input[aria-invalid="true"] {
+        border-color: #dc2626;
+        background: #fef2f2;
+      }
+
+      .location-remove {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #cbd5e0;
+        border-radius: 50%;
+        background: #fff;
+        color: #4a5568;
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+
+      .location-remove:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .location-error {
+        color: #b91c1c;
+        font-size: 0.78rem;
+      }
+
+      .location-error:empty {
+        display: none;
+      }
+
+      .location-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .location-actions > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .location-actions button {
+        padding: 0.4rem 0.85rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        background: #fff;
+        color: #2d3748;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+      }
+
+      .location-actions button:hover {
+        background: #e2e8f0;
+      }
+
+      .location-actions button.primary {
+        border-color: #2e4a7a;
+        background: #2e4a7a;
+        color: #fff;
+      }
+
+      .location-actions button.primary:hover {
+        background: #1b2a4a;
+      }
+
+      .legend-edit:focus-visible,
+      .location-row input:focus-visible,
+      .location-remove:focus-visible,
+      .location-actions button:focus-visible {
+        outline: 3px solid rgba(245, 158, 11, 0.55);
+        outline-offset: 1px;
+      }
+
       /* ── Day details ──────────────────────────────────────────── */
       .day-head {
         display: flex;
@@ -828,6 +985,34 @@
         .detail-header {
           padding: 0.9rem 1rem;
         }
+        .location-editor {
+          padding: 0.8rem 1rem 1rem;
+        }
+        .location-row-header {
+          display: none;
+        }
+        /* two lines per location: name + remove, then lat / lng / timezone */
+        .location-row {
+          grid-template-columns: 14px minmax(0, 1fr) minmax(0, 1fr) 30px;
+          padding-bottom: 0.4rem;
+          border-bottom: 1px solid #dbe3ee;
+        }
+        .location-row input[data-field="name"] {
+          grid-column: 2 / 4;
+        }
+        .location-row .location-remove {
+          grid-column: 4;
+          grid-row: 1;
+        }
+        .location-row input[data-field="lat"] {
+          grid-column: 2;
+        }
+        .location-row input[data-field="lng"] {
+          grid-column: 3;
+        }
+        .location-row input[data-field="timezone"] {
+          grid-column: 2 / 4;
+        }
         .detail-content {
           padding: 0.7rem;
         }
@@ -917,6 +1102,50 @@
       <div class="chart-tooltip" id="chartTooltip" role="tooltip" hidden></div>
     </div>
     <div class="chart-tooltip" id="calendarTooltip" role="tooltip" hidden></div>
+
+    <div class="detail-overlay" id="locationOverlay" hidden>
+      <section
+        class="detail-dialog location-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="locationTitle"
+      >
+        <div class="detail-header">
+          <div>
+            <div class="detail-eyebrow">Settings</div>
+            <h2 class="detail-title" id="locationTitle">Locations</h2>
+          </div>
+          <button
+            class="detail-close"
+            id="locationClose"
+            type="button"
+            aria-label="Close location editor"
+          >
+            &times;
+          </button>
+        </div>
+        <form class="location-editor" id="locationForm" novalidate>
+          <p class="location-editor-note" id="locationNote"></p>
+          <div class="location-row-header" aria-hidden="true">
+            <span>Name</span><span>Latitude</span><span>Longitude</span
+            ><span>Timezone (IANA)</span>
+          </div>
+          <div class="location-rows" id="locationRows"></div>
+          <div class="location-error" id="locationError" role="alert"></div>
+          <div class="location-actions">
+            <div>
+              <button type="button" id="locationAdd">+ Add location</button>
+              <button type="button" id="locationReset">Reset to presets</button>
+            </div>
+            <div>
+              <button type="button" id="locationCancel">Cancel</button>
+              <button type="submit" class="primary">Apply</button>
+            </div>
+          </div>
+        </form>
+        <datalist id="timezoneOptions"></datalist>
+      </section>
+    </div>
 
     <script>
       // ═══════════════════════════════════════════════════════════════
@@ -1475,10 +1704,16 @@
 
       function renderLegend() {
         const el = document.getElementById("legend");
-        el.innerHTML = locations
-          .map((loc, i) => {
-            const color = colorFor(i);
-            return `<div class="legend-item">
+        const editButton = `<button class="legend-edit" id="legendEdit" type="button" title="Edit the locations stored in the URL">Edit locations</button>`;
+        if (!locations.length) {
+          el.innerHTML = `<span class="legend-empty">No valid locations in the URL.</span>${editButton}`;
+          return;
+        }
+        el.innerHTML =
+          locations
+            .map((loc, i) => {
+              const color = colorFor(i);
+              return `<div class="legend-item">
       <span class="legend-dot" style="background:${color}"></span>
       <span>${esc(loc.name)}</span>
       <span class="legend-times">
@@ -1487,8 +1722,8 @@
         <span class="legend-set">&#8595; set</span>
       </span>
     </div>`;
-          })
-          .join("");
+            })
+            .join("") + editButton;
       }
 
       function esc(s) {
@@ -1600,8 +1835,7 @@
       const hourForX = (x) =>
         clamp(((x - CHART.left) / CHART.plotWidth) * 24, 0, 24);
       const yForAltitude = (altitude) =>
-        CHART.horizonY -
-        clamp(altitude, -90, 90) * CHART.verticalScale;
+        CHART.horizonY - clamp(altitude, -90, 90) * CHART.verticalScale;
 
       function fmtHour(hour) {
         const total = Math.round(clamp(hour, 0, 24) * 60);
@@ -2351,6 +2585,13 @@
       });
 
       document.addEventListener("keydown", (e) => {
+        if (!locationOverlay.hidden) {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            closeLocationEditor();
+          }
+          return;
+        }
         if (!detailOverlay.hidden && e.key === "Escape") {
           e.preventDefault();
           closeDetails();
@@ -2385,7 +2626,8 @@
       // Locations
       // ═══════════════════════════════════════════════════════════════
 
-      locations = [
+      // Presets are used only when the URL has no `loc` parameters.
+      const PRESET_LOCATIONS = [
         {
           name: "New York",
           lat: 40.71,
@@ -2431,6 +2673,263 @@
         { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
       ];
 
+      // ═══════════════════════════════════════════════════════════════
+      // Query string: ?loc=Name,lat,lng,Timezone&loc=...
+      // ═══════════════════════════════════════════════════════════════
+
+      function isValidTimeZone(timezone) {
+        if (!timezone) return false;
+        try {
+          new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      // Returns an error message, or null when the location is usable.
+      function locationError2(loc) {
+        if (!loc.name) return "Name is required.";
+        if (!Number.isFinite(loc.lat) || loc.lat < -90 || loc.lat > 90)
+          return "Latitude must be a number between -90 and 90.";
+        if (!Number.isFinite(loc.lng) || loc.lng < -180 || loc.lng > 180)
+          return "Longitude must be a number between -180 and 180.";
+        if (!isValidTimeZone(loc.timezone))
+          return "Timezone must be an IANA name such as Europe/Berlin.";
+        return null;
+      }
+
+      function parseNumber(value) {
+        const text = String(value).trim();
+        return text === "" ? NaN : Number(text);
+      }
+
+      // Name may itself contain commas, so the fixed fields are taken from the end.
+      function parseLocationParam(value) {
+        const parts = value.split(",");
+        if (parts.length < 4) return null;
+        const timezone = parts.pop().trim();
+        const lng = parseNumber(parts.pop());
+        const lat = parseNumber(parts.pop());
+        const loc = { name: parts.join(",").trim(), lat, lng, timezone };
+        return locationError2(loc) ? null : loc;
+      }
+
+      // null when the URL has no `loc` parameters; invalid entries are skipped.
+      function locationsFromQuery() {
+        const values = new URLSearchParams(window.location.search).getAll(
+          "loc",
+        );
+        if (!values.length) return null;
+        return values.flatMap((value) => {
+          const loc = parseLocationParam(value);
+          if (!loc) console.warn(`Ignoring invalid loc parameter: ${value}`);
+          return loc ? [loc] : [];
+        });
+      }
+
+      // Keep commas, slashes and spaces readable in the address bar.
+      function encodeQueryValue(value) {
+        return encodeURIComponent(value)
+          .replace(/%2C/gi, ",")
+          .replace(/%2F/gi, "/")
+          .replace(/%20/g, "+");
+      }
+
+      function locationsQuery(list) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete("loc");
+        const rest = params.toString();
+        const locs = list.map(
+          (loc) =>
+            `loc=${encodeQueryValue(`${loc.name},${loc.lat},${loc.lng},${loc.timezone}`)}`,
+        );
+        const query = [...locs, ...(rest ? [rest] : [])].join("&");
+        return query ? `?${query}` : "";
+      }
+
+      function loadLocations() {
+        locations =
+          locationsFromQuery() ?? PRESET_LOCATIONS.map((loc) => ({ ...loc }));
+      }
+
+      function setLocationsQuery(list) {
+        const url = `${window.location.pathname}${locationsQuery(list)}${window.location.hash}`;
+        try {
+          history.pushState(null, "", url);
+        } catch {
+          // Some browsers refuse history changes on file:// pages; reload instead.
+          window.location.href = url;
+          return;
+        }
+        loadLocations();
+        render();
+      }
+
+      window.addEventListener("popstate", () => {
+        closeDetails();
+        closeLocationEditor();
+        loadLocations();
+        render();
+      });
+
+      // ═══════════════════════════════════════════════════════════════
+      // Location editor
+      // ═══════════════════════════════════════════════════════════════
+
+      const locationOverlay = document.getElementById("locationOverlay");
+      const locationForm = document.getElementById("locationForm");
+      const locationRows = document.getElementById("locationRows");
+      const locationError = document.getElementById("locationError");
+      const locationNote = document.getElementById("locationNote");
+      const locationClose = document.getElementById("locationClose");
+      let locationReturnFocus = null;
+
+      if (typeof Intl.supportedValuesOf === "function") {
+        document.getElementById("timezoneOptions").innerHTML =
+          Intl.supportedValuesOf("timeZone")
+            .map((tz) => `<option value="${esc(tz)}"></option>`)
+            .join("");
+      }
+
+      function locationRowHtml(loc) {
+        const field = (name, value, label, extra = "") =>
+          `<input data-field="${name}" value="${esc(String(value))}" aria-label="${label}" placeholder="${label}" autocomplete="off" spellcheck="false" ${extra}>`;
+        return `<div class="location-row">
+      <span class="legend-dot"></span>
+      ${field("name", loc.name, "Name")}
+      ${field("lat", loc.lat, "Latitude", 'inputmode="decimal"')}
+      ${field("lng", loc.lng, "Longitude", 'inputmode="decimal"')}
+      ${field("timezone", loc.timezone, "Timezone", 'list="timezoneOptions"')}
+      <button class="location-remove" type="button" data-remove-location aria-label="Remove location" title="Remove location">&times;</button>
+    </div>`;
+      }
+
+      // Row order determines display colors, so recolor after adds and removals.
+      function updateLocationRowColors() {
+        locationRows
+          .querySelectorAll(".location-row .legend-dot")
+          .forEach((dot, i) => {
+            dot.style.background = colorFor(i);
+          });
+      }
+
+      function fillLocationEditor(list) {
+        locationRows.innerHTML = list.map(locationRowHtml).join("");
+        locationError.textContent = "";
+        updateLocationRowColors();
+      }
+
+      function openLocationEditor(opener) {
+        closeDetails();
+        hideCalendarTooltip();
+        const fromQuery = locationsFromQuery() !== null;
+        locationNote.innerHTML = fromQuery
+          ? "Locations are currently read from the URL. Applying updates the URL, so you can bookmark or share it."
+          : "Showing the built-in presets. Applying stores the locations in the URL as <code>?loc=Name,lat,lng,Timezone</code>, so you can bookmark or share it.";
+        fillLocationEditor(locations);
+        locationReturnFocus = opener;
+        locationOverlay.hidden = false;
+        document.body.classList.add("modal-open");
+        const first = locationRows.querySelector("input");
+        (first || document.getElementById("locationAdd")).focus();
+      }
+
+      function closeLocationEditor() {
+        if (locationOverlay.hidden) return;
+        locationOverlay.hidden = true;
+        document.body.classList.remove("modal-open");
+        const returnFocus = locationReturnFocus;
+        locationReturnFocus = null;
+        if (returnFocus && document.body.contains(returnFocus))
+          returnFocus.focus();
+        else document.getElementById("legendEdit")?.focus();
+      }
+
+      function readLocationEditor() {
+        let firstError = null;
+        const list = [...locationRows.querySelectorAll(".location-row")].map(
+          (row, i) => {
+            const input = (name) => row.querySelector(`[data-field="${name}"]`);
+            const loc = {
+              name: input("name").value.trim(),
+              lat: parseNumber(input("lat").value),
+              lng: parseNumber(input("lng").value),
+              timezone: input("timezone").value.trim(),
+            };
+            const invalid = {
+              name: !loc.name,
+              lat: !Number.isFinite(loc.lat) || Math.abs(loc.lat) > 90,
+              lng: !Number.isFinite(loc.lng) || Math.abs(loc.lng) > 180,
+              timezone: !isValidTimeZone(loc.timezone),
+            };
+            for (const name in invalid)
+              input(name).setAttribute("aria-invalid", String(invalid[name]));
+            const error = locationError(loc);
+            if (error && !firstError) {
+              firstError = `Location ${i + 1}: ${error}`;
+              row.querySelector('[aria-invalid="true"]').focus();
+            }
+            return loc;
+          },
+        );
+        if (!firstError && !list.length)
+          firstError = "Add at least one location.";
+        return { list, error: firstError };
+      }
+
+      locationForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const { list, error } = readLocationEditor();
+        locationError.textContent = error || "";
+        if (error) return;
+        closeLocationEditor();
+        setLocationsQuery(list);
+      });
+
+      locationRows.addEventListener("click", (e) => {
+        const remove = e.target.closest("[data-remove-location]");
+        if (!remove) return;
+        const row = remove.closest(".location-row");
+        const next = row.nextElementSibling || row.previousElementSibling;
+        row.remove();
+        updateLocationRowColors();
+        (
+          next?.querySelector("input") || document.getElementById("locationAdd")
+        ).focus();
+      });
+
+      locationRows.addEventListener("input", (e) => {
+        e.target.removeAttribute("aria-invalid");
+      });
+
+      document.getElementById("locationAdd").addEventListener("click", () => {
+        locationRows.insertAdjacentHTML(
+          "beforeend",
+          locationRowHtml({ name: "", lat: "", lng: "", timezone: "" }),
+        );
+        updateLocationRowColors();
+        locationRows.lastElementChild.querySelector("input").focus();
+      });
+
+      document.getElementById("locationReset").addEventListener("click", () => {
+        fillLocationEditor(PRESET_LOCATIONS);
+      });
+
+      document
+        .getElementById("locationCancel")
+        .addEventListener("click", closeLocationEditor);
+      locationClose.addEventListener("click", closeLocationEditor);
+      locationOverlay.addEventListener("click", (e) => {
+        if (e.target === locationOverlay) closeLocationEditor();
+      });
+
+      document.getElementById("legend").addEventListener("click", (e) => {
+        const button = e.target.closest("#legendEdit");
+        if (button) openLocationEditor(button);
+      });
+
+      loadLocations();
       render();
     </script>
   </body>
