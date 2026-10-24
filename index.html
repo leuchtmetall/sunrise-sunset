@@ -2623,57 +2623,6 @@
       }
 
       // ═══════════════════════════════════════════════════════════════
-      // Locations
-      // ═══════════════════════════════════════════════════════════════
-
-      // Presets are used only when the URL has no `loc` parameters.
-      const PRESET_LOCATIONS = [
-        {
-          name: "New York",
-          lat: 40.71,
-          lng: -74,
-          timezone: "America/New_York",
-        },
-        {
-          name: "Los Angeles",
-          lat: 34.0522,
-          lng: -118.2437,
-          timezone: "America/Los_Angeles",
-        },
-        {
-          name: "London",
-          lat: 51.5074,
-          lng: -0.1278,
-          timezone: "Europe/London",
-        },
-        {
-          name: "Paris",
-          lat: 48.8566,
-          lng: 2.3522,
-          timezone: "Europe/Paris",
-        },
-        {
-          name: "Tokyo",
-          lat: 35.6762,
-          lng: 139.6503,
-          timezone: "Asia/Tokyo",
-        },
-        {
-          name: "Sydney",
-          lat: -33.8688,
-          lng: 151.2093,
-          timezone: "Australia/Sydney",
-        },
-        {
-          name: "Reykjavik",
-          lat: 64.1355,
-          lng: -21.8954,
-          timezone: "Atlantic/Reykjavik",
-        },
-        { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
-      ];
-
-      // ═══════════════════════════════════════════════════════════════
       // Query string: ?loc=Name,lat,lng,Timezone&loc=...
       // ═══════════════════════════════════════════════════════════════
 
@@ -2688,7 +2637,7 @@
       }
 
       // Returns an error message, or null when the location is usable.
-      function locationError2(loc) {
+      function locationErrorMessage(loc) {
         if (!loc.name) return "Name is required.";
         if (!Number.isFinite(loc.lat) || loc.lat < -90 || loc.lat > 90)
           return "Latitude must be a number between -90 and 90.";
@@ -2712,7 +2661,7 @@
         const lng = parseNumber(parts.pop());
         const lat = parseNumber(parts.pop());
         const loc = { name: parts.join(",").trim(), lat, lng, timezone };
-        return locationError2(loc) ? null : loc;
+        return locationErrorMessage(loc) ? null : loc;
       }
 
       // null when the URL has no `loc` parameters; invalid entries are skipped.
@@ -2865,7 +2814,7 @@
             };
             for (const name in invalid)
               input(name).setAttribute("aria-invalid", String(invalid[name]));
-            const error = locationError(loc);
+            const error = locationErrorMessage(loc);
             if (error && !firstError) {
               firstError = `Location ${i + 1}: ${error}`;
               row.querySelector('[aria-invalid="true"]').focus();
@@ -2928,6 +2877,57 @@
         const button = e.target.closest("#legendEdit");
         if (button) openLocationEditor(button);
       });
+
+      // ═══════════════════════════════════════════════════════════════
+      // Locations
+      // ═══════════════════════════════════════════════════════════════
+
+      // Presets are used only when the URL has no `loc` parameters.
+      const PRESET_LOCATIONS = [
+        {
+          name: "New York",
+          lat: 40.71,
+          lng: -74,
+          timezone: "America/New_York",
+        },
+        {
+          name: "Los Angeles",
+          lat: 34.0522,
+          lng: -118.2437,
+          timezone: "America/Los_Angeles",
+        },
+        {
+          name: "London",
+          lat: 51.5074,
+          lng: -0.1278,
+          timezone: "Europe/London",
+        },
+        {
+          name: "Paris",
+          lat: 48.8566,
+          lng: 2.3522,
+          timezone: "Europe/Paris",
+        },
+        {
+          name: "Tokyo",
+          lat: 35.6762,
+          lng: 139.6503,
+          timezone: "Asia/Tokyo",
+        },
+        {
+          name: "Sydney",
+          lat: -33.8688,
+          lng: 151.2093,
+          timezone: "Australia/Sydney",
+        },
+        {
+          name: "Reykjavik",
+          lat: 64.1355,
+          lng: -21.8954,
+          timezone: "Atlantic/Reykjavik",
+        },
+        { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
+      ];
 
       loadLocations();
       render();
