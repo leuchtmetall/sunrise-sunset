@@ -2526,6 +2526,7 @@
           locationsFromQuery() ?? PRESET_LOCATIONS.map((loc) => ({ ...loc }));
       }
 
+      // An empty list removes the `loc` parameters, falling back to presets.
       function setLocationsQuery(list) {
         const url = `${window.location.pathname}${locationsQuery(list)}${window.location.hash}`;
         try {
@@ -2551,6 +2552,8 @@
       // ═══════════════════════════════════════════════════════════════
 
       let locationReturnFocus = null;
+      // True while the editor shows an untouched "Reset to presets".
+      let locationResetPending = false;
 
       if (typeof Intl.supportedValuesOf === "function") {
         document.getElementById("timezoneOptions").innerHTML =
@@ -2584,6 +2587,7 @@
       function fillLocationEditor(list) {
         locationRows.innerHTML = list.map(locationRowHtml).join("");
         locationError.textContent = "";
+        locationResetPending = false;
         updateLocationRowColors();
       }
 
@@ -2648,7 +2652,7 @@
         locationError.textContent = error || "";
         if (error) return;
         closeLocationEditor();
-        setLocationsQuery(list);
+        setLocationsQuery(locationResetPending ? [] : list);
       });
 
       locationRows.addEventListener("click", (e) => {
@@ -2657,12 +2661,14 @@
         const row = remove.closest(".location-row");
         const next = row.nextElementSibling || row.previousElementSibling;
         row.remove();
+        locationResetPending = false;
         updateLocationRowColors();
         (next?.querySelector("input") || locationAdd).focus();
       });
 
       locationRows.addEventListener("input", (e) => {
         e.target.removeAttribute("aria-invalid");
+        locationResetPending = false;
       });
 
       locationAdd.addEventListener("click", () => {
@@ -2670,12 +2676,14 @@
           "beforeend",
           locationRowHtml({ name: "", lat: "", lng: "", timezone: "" }),
         );
+        locationResetPending = false;
         updateLocationRowColors();
         locationRows.lastElementChild.querySelector("input").focus();
       });
 
       document.getElementById("locationReset").addEventListener("click", () => {
         fillLocationEditor(PRESET_LOCATIONS);
+        locationResetPending = true;
       });
 
       document
