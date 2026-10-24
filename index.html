@@ -1412,7 +1412,11 @@
       // Creating Intl.DateTimeFormat instances is slow, so keep one per zone.
       const timeFormatters = new Map();
       const partsFormatters = new Map();
-      const TIME_OPTIONS = { hour: "2-digit", minute: "2-digit", hour12: false };
+      const TIME_OPTIONS = {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      };
 
       function fmtTime(date, tz) {
         const formatter = cached(timeFormatters, tz, () => {
@@ -1718,15 +1722,55 @@
       // ═══════════════════════════════════════════════════════════════
 
       const EVENT_DEFINITIONS = [
-        { key: "astronomicalDawn", label: "Astronomical dawn", short: "Astro dawn", color: "#334e68" },
-        { key: "nauticalDawn", label: "Nautical dawn", short: "Nautical dawn", color: "#7c8da6" },
-        { key: "civilDawn", label: "Civil dawn", short: "Civil dawn", color: "#f59e0b" },
-        { key: "sunrise", label: "Sunrise", short: "Sunrise", color: "#e67e22" },
-        { key: "solarNoon", label: "Solar noon", short: "Solar noon", color: "#d4a017" },
+        {
+          key: "astronomicalDawn",
+          label: "Astronomical dawn",
+          short: "Astro dawn",
+          color: "#334e68",
+        },
+        {
+          key: "nauticalDawn",
+          label: "Nautical dawn",
+          short: "Nautical dawn",
+          color: "#7c8da6",
+        },
+        {
+          key: "civilDawn",
+          label: "Civil dawn",
+          short: "Civil dawn",
+          color: "#f59e0b",
+        },
+        {
+          key: "sunrise",
+          label: "Sunrise",
+          short: "Sunrise",
+          color: "#e67e22",
+        },
+        {
+          key: "solarNoon",
+          label: "Solar noon",
+          short: "Solar noon",
+          color: "#d4a017",
+        },
         { key: "sunset", label: "Sunset", short: "Sunset", color: "#e67e22" },
-        { key: "civilDusk", label: "Civil dusk", short: "Civil dusk", color: "#f59e0b" },
-        { key: "nauticalDusk", label: "Nautical dusk", short: "Nautical dusk", color: "#7c8da6" },
-        { key: "astronomicalDusk", label: "Astronomical dusk", short: "Astro dusk", color: "#334e68" },
+        {
+          key: "civilDusk",
+          label: "Civil dusk",
+          short: "Civil dusk",
+          color: "#f59e0b",
+        },
+        {
+          key: "nauticalDusk",
+          label: "Nautical dusk",
+          short: "Nautical dusk",
+          color: "#7c8da6",
+        },
+        {
+          key: "astronomicalDusk",
+          label: "Astronomical dusk",
+          short: "Astro dusk",
+          color: "#334e68",
+        },
       ];
 
       // Chart geometry — shared so pointer positions can be mapped back to hours.
@@ -1854,13 +1898,18 @@
         let labels = "";
         [...zones.values()].forEach((s, zoneIndex) => {
           const zoneName = s.loc.timezone.split("/").pop().replace(/_/g, " ");
-          const labelY = CHART.axisLabelY + zoneIndex * CHART.axisLabelLineHeight;
+          const labelY =
+            CHART.axisLabelY + zoneIndex * CHART.axisLabelLineHeight;
           for (const hour of AXIS_HOURS) {
             const displayHour = hour + s.shift;
             if (displayHour < 0 || displayHour > 24) continue;
             const x = rawXForDisplayHour(displayHour).toFixed(1);
             const suffix = hour === 12 ? ` ${zoneName}` : "";
-            grid += gridLine("chart-grid chart-grid-zone", x, ` style="stroke:${s.color}"`);
+            grid += gridLine(
+              "chart-grid chart-grid-zone",
+              x,
+              ` style="stroke:${s.color}"`,
+            );
             labels += `<text class="chart-label chart-label-zone" style="fill:${s.color}" x="${x}" y="${labelY}" text-anchor="middle">${fmtHour(hour)}${suffix}</text>`;
           }
         });
@@ -1901,7 +1950,8 @@
               );
               const tooltipY = TOOLTIP_LANE_Y[event.key];
               const tooltipCenterX = tooltipX + tooltipWidth / 2;
-              const linkEndY = y < tooltipY ? tooltipY + TOOLTIP_HEIGHT : tooltipY;
+              const linkEndY =
+                y < tooltipY ? tooltipY + TOOLTIP_HEIGHT : tooltipY;
               return `<circle class="chart-event-dot" data-event-id="location-${s.index}-${event.key}" data-location-index="${s.index}" data-tooltip="${label}" aria-label="${label}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius}" style="fill:${s.color};stroke:${event.color}"></circle>
                 <g class="chart-event-tooltip" data-location-index="${s.index}" aria-label="${event.label}: ${time}">
                   <line class="chart-event-tooltip-link" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${tooltipCenterX.toFixed(1)}" y2="${linkEndY.toFixed(1)}"></line>
@@ -2152,7 +2202,10 @@
           const isSameLocation = index === hovered || isPinned;
           element.classList.toggle("is-muted", isActive && !isSameLocation);
           element.classList.toggle("is-focused", isActive && isSameLocation);
-          element.classList.toggle("is-line-dimmed", pinned != null && !isPinned);
+          element.classList.toggle(
+            "is-line-dimmed",
+            pinned != null && !isPinned,
+          );
           element.classList.toggle("is-line-pinned", isPinned);
           if (element.dataset.locationToggle != null) {
             element.classList.toggle("is-selected", isPinned);
@@ -2646,13 +2699,38 @@
 
       // Presets are used only when the URL has no `loc` parameters.
       const PRESET_LOCATIONS = [
-        { name: "New York", lat: 40.71, lng: -74, timezone: "America/New_York" },
-        { name: "Los Angeles", lat: 34.0522, lng: -118.2437, timezone: "America/Los_Angeles" },
-        { name: "London", lat: 51.5074, lng: -0.1278, timezone: "Europe/London" },
+        {
+          name: "New York",
+          lat: 40.71,
+          lng: -74,
+          timezone: "America/New_York",
+        },
+        {
+          name: "Los Angeles",
+          lat: 34.0522,
+          lng: -118.2437,
+          timezone: "America/Los_Angeles",
+        },
+        {
+          name: "London",
+          lat: 51.5074,
+          lng: -0.1278,
+          timezone: "Europe/London",
+        },
         { name: "Paris", lat: 48.8566, lng: 2.3522, timezone: "Europe/Paris" },
         { name: "Tokyo", lat: 35.6762, lng: 139.6503, timezone: "Asia/Tokyo" },
-        { name: "Sydney", lat: -33.8688, lng: 151.2093, timezone: "Australia/Sydney" },
-        { name: "Reykjavik", lat: 64.1355, lng: -21.8954, timezone: "Atlantic/Reykjavik" },
+        {
+          name: "Sydney",
+          lat: -33.8688,
+          lng: 151.2093,
+          timezone: "Australia/Sydney",
+        },
+        {
+          name: "Reykjavik",
+          lat: 64.1355,
+          lng: -21.8954,
+          timezone: "Atlantic/Reykjavik",
+        },
         { name: "Dubai", lat: 25.2048, lng: 55.2708, timezone: "Asia/Dubai" },
       ];
 
